@@ -9,7 +9,7 @@ import "./style.css"
    del día (fatiga/energía). Cada misión genera un plan estructurado con
    calentamiento, bloque principal y enfriamiento, listo para una "foto rápida".
    ========================================================================== */
-import { ref, computed, reactive, watch } from "vue"
+import { ref, computed, reactive, watch, onMounted } from "vue"
 
 // El estado que se guardará en localStorage
 const state = reactive({
@@ -38,14 +38,18 @@ function debounce(fn, delay) {
   }
 }
 
-// Cargar estado desde localStorage al inicio
-const savedState = localStorage.getItem("runArcadeState")
-if (savedState) {
-  Object.assign(state, JSON.parse(savedState))
-}
+onMounted(() => {
+  // Cargar estado desde localStorage al inicio
+  const savedState = localStorage.getItem("runArcadeState")
+  if (savedState) {
+    Object.assign(state, JSON.parse(savedState))
+  }
+})
 
 const saveState = debounce((newState) => {
-  localStorage.setItem("runArcadeState", JSON.stringify(newState))
+  if (import.meta.client) {
+    localStorage.setItem("runArcadeState", JSON.stringify(newState))
+  }
 }, 400) // 400ms de espera
 
 // Guardar estado en localStorage cada vez que cambie
