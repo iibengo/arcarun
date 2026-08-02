@@ -22,28 +22,12 @@ const MISSIONS = [
     icon: "🟢",
     hex: "#39ff88",
     tip: "Ritmo de charla. Si no puedes hablar, vas demasiado rápido. Hoy toca sumar, no sufrir.",
-    type: "simple_run",
+    type: "custom",
     planConfig: {
-      warmup_min: 0,
-      cooldown_min: 0,
-      mainBlock: {
-        label: "Rodaje regenerativo",
-        metaTemplate: "{duration}' continuos",
-        unit: "duration", // 'duration' o 'distance'
-        param: "regenMin", // clave en state
-        offset: 75,
-      },
-      extraBlocks: [
-        {
-          tag: "EXTRA",
-          label: "Movilidad + estiramientos",
-          meta: "5 min · suelta piernas",
-          pace: null,
-          km: 0,
-          sec: 300,
-          hex: "#ffe14d",
-        },
-      ],
+      blocks: [
+        { type: "run", label: "Rodaje regenerativo", metaTemplate: "{value} min continuos", unit: "duration", value_param: "regenMin", offset: 75 },
+        { type: "extra", label: "Movilidad + estiramientos", meta: "5 min · suelta piernas", sec: 300, hex: "#ffe14d" },
+      ]
     },
   },
   {
@@ -53,45 +37,31 @@ const MISSIONS = [
     icon: "🔵",
     hex: "#35c1ff",
     tip: "Corre relajado y controla la respiración. Termina con ganas de hacer un km más.",
-    type: "simple_run",
+    type: "custom",
     planConfig: {
-      warmup_min: 8,
-      cooldown_min: 5,
-      mainBlock: {
-        label: "Rodaje aeróbico",
-        metaTemplate: "{distance} km continuos",
-        unit: "distance",
-        param: "aerobicKm",
-        offset: 48,
-      },
+      blocks: [
+        { type: "warmup", unit: "duration", value: 8 },
+        { type: "run", label: "Rodaje aeróbico", metaTemplate: "{value} km continuos", unit: "distance", value_param: "aerobicKm", offset: 48 },
+        { type: "cooldown", unit: "duration", value: 5 },
+      ]
     },
   },
-  {
+    {
     key: "series",
     name: "SERIES",
     sub: "Intervalos · VO2",
     icon: "⚡",
     hex: "#ff4b3e",
     tip: "Empieza controlado: la primera serie debe parecerte fácil. Corre las últimas igual que las primeras.",
-    type: "interval",
+    type: "custom",
     planConfig: {
-      warmup_min: 12,
-      cooldown_min: 8,
-      mainBlock: {
-        label: "Bloque de series",
-        metaTemplate: "{reps} × {dist}m · rec {rec_s}'' trote",
-        work_offset: -18,
-        rec_pace_offset: "recovery",
-        params: {
-          reps: "seriesReps",
-          dist: "seriesDist",
-          rec_s: 90,
-        },
-      },
-      config: {
-        distances: [400, 800, 1000],
-      },
+       blocks: [
+        { type: "warmup", unit: "duration", value: 12 },
+        { type: "interval", label: "Bloque de series", metaTemplate: "{reps} × {dist}m · rec {rec_s}'' trote", work_offset: -18, rec_pace_offset: "recovery", params: { reps: "seriesReps", dist: "seriesDist", rec_s: 90 }},
+        { type: "cooldown", unit: "duration", value: 8 },
+      ]
     },
+     config: { distances: [400, 800, 1000] },
   },
   {
     key: "tempo",
@@ -100,17 +70,13 @@ const MISSIONS = [
     icon: "🔥",
     hex: "#ff8a1e",
     tip: "Ritmo 'cómodamente duro': sostenible pero exigente. No lo conviertas en una carrera.",
-    type: "simple_run",
+    type: "custom",
     planConfig: {
-      warmup_min: 12,
-      cooldown_min: 8,
-      mainBlock: {
-        label: "Bloque tempo continuo",
-        metaTemplate: "{duration}' a umbral",
-        unit: "duration",
-        param: "tempoMin",
-        offset: 12,
-      },
+      blocks: [
+        { type: "warmup", unit: "duration", value: 12 },
+        { type: "run", label: "Bloque tempo continuo", metaTemplate: "{value} min a umbral", unit: "duration", value_param: "tempoMin", offset: 12 },
+        { type: "cooldown", unit: "duration", value: 8 },
+      ]
     },
   },
   {
@@ -120,21 +86,13 @@ const MISSIONS = [
     icon: "🌀",
     hex: "#b06bff",
     tip: "Juega con el ritmo. Exprime las partes rápidas y recupera DE VERDAD en las suaves.",
-    type: "interval",
+    type: "custom",
     planConfig: {
-      warmup_min: 10,
-      cooldown_min: 8,
-      mainBlock: {
-        label: "Bloque fartlek",
-        metaTemplate: "{reps} × ({work_s}'' fuerte / {rec_s}'' suave)",
-        work_offset: -12,
-        rec_pace_offset: "fartlekSlow",
-        params: {
-          reps: "fartlekReps",
-          work_s: 60,
-          rec_s: 90,
-        },
-      },
+      blocks: [
+        { type: "warmup", unit: "duration", value: 10 },
+        { type: "interval", label: "Bloque fartlek", metaTemplate: "{reps} × ({work_s}'' fuerte / {rec_s}'' suave)", work_offset: -12, rec_pace_offset: "fartlekSlow", params: { reps: "fartlekReps", work_s: 60, rec_s: 90 }},
+        { type: "cooldown", unit: "duration", value: 8 },
+      ]
     },
   },
   {
@@ -144,35 +102,29 @@ const MISSIONS = [
     icon: "🔋",
     hex: "#ffc700",
     tip: "La clave es la consistencia. Mantén un ritmo que te permita conversar. No te obsesiones con la velocidad, hoy sumamos kilómetros.",
-    type: "simple_run",
+    type: "custom",
     planConfig: {
-      warmup_min: 5,
-      cooldown_min: 5,
-      mainBlock: {
-        label: "Tirada larga",
-        metaTemplate: "{distance} km a ritmo sostenido",
-        unit: "distance",
-        param: "longRunKm",
-        offset: 55,
-      },
+      blocks: [
+        { type: "warmup", unit: "duration", value: 5 },
+        { type: "run", label: "Tirada larga", metaTemplate: "{value} km a ritmo sostenido", unit: "distance", value_param: "longRunKm", offset: 55 },
+        { type: "cooldown", unit: "duration", value: 5 },
+      ]
     },
   },
-  {
+    {
     key: "progresiva",
     name: "PROGRESIVA",
     sub: "De menos a más",
     icon: "📈",
     hex: "#ff6b00",
     tip: "Paciencia al principio. La primera parte debe sentirse muy cómoda. Concéntrate en apretar de verdad solo en el último tercio.",
-    type: "progressive",
+    type: "custom",
     planConfig: {
-      warmup_min: 10,
-      cooldown_min: 8,
-      mainBlock: {
-        label: "Bloque progresivo",
-        param: "progressiveKm",
-        offsets: ["prog1", "prog2", "prog3"],
-      },
+      blocks: [
+        { type: "warmup", unit: "duration", value: 10 },
+        { type: "progressive", label: "Bloque progresivo", param: "progressiveKm", offsets: ["prog1", "prog2", "prog3"] },
+        { type: "cooldown", unit: "duration", value: 8 },
+      ]
     },
   },
   {
@@ -182,24 +134,15 @@ const MISSIONS = [
     icon: "⛰️",
     hex: "#d9334a",
     tip: "Ataca la subida con buena forma: mirada al frente, braceo activo. La recuperación es clave, baja trotando muy suave para estar listo para la siguiente.",
-    type: "hills",
+    type: "custom",
     planConfig: {
-      warmup_min: 15,
-      cooldown_min: 10,
-      mainBlock: {
-        label: "Bloque de cuestas",
-        metaTemplate: "{reps} × {work_s}s · rec. bajada",
-        rec_pace_offset: "recovery",
-        params: {
-          reps: "hillReps",
-          work_s: "hillDuration",
-          rec_multiplier: 2,
-        },
-      },
-      config: {
-        durations: [45, 60, 90],
-      },
+      blocks: [
+        { type: "warmup", unit: "duration", value: 15 },
+        { type: "hills", label: "Bloque de cuestas", metaTemplate: "{reps} × {work_s}s · rec. bajada", rec_pace_offset: "recovery", params: { reps: "hillReps", work_s: "hillDuration", rec_multiplier: 2 }},
+        { type: "cooldown", unit: "duration", value: 10 },
+      ]
     },
+    config: { durations: [45, 60, 90] },
   },
   {
     key: "piramide",
@@ -208,20 +151,13 @@ const MISSIONS = [
     icon: "🔺",
     hex: "#8a42e2",
     tip: "Mantén la calma en la subida de la pirámide; no gastes toda la energía. El objetivo es hacer la segunda mitad tan fuerte como la primera.",
-    type: "pyramid",
+    type: "custom",
     planConfig: {
-      warmup_min: 12,
-      cooldown_min: 10,
-      mainBlock: {
-        label: "Bloque pirámide",
-        metaTemplate: "1-2-3-4-3-2-1 min · rec {rec_s}s",
-        work_offset: -18,
-        rec_pace_offset: "recovery",
-        params: {
-          steps_min: [1, 2, 3, 4, 3, 2, 1],
-          rec_s: 90,
-        },
-      },
+      blocks: [
+        { type: "warmup", unit: "duration", value: 12 },
+        { type: "pyramid", label: "Bloque pirámide", metaTemplate: "1-2-3-4-3-2-1 min · rec {rec_s}s", work_offset: -18, rec_pace_offset: "recovery", params: { steps_min: [1, 2, 3, 4, 3, 2, 1], rec_s: 90 }},
+        { type: "cooldown", unit: "duration", value: 10 },
+      ]
     },
   },
 ]
@@ -312,36 +248,32 @@ function showCreateForm() {
     icon: "🧑‍🚀",
     hex: "#e0e0e0",
     tip: "¡Buen entrenamiento!",
-    type: "simple_run",
+    type: "custom",
     planConfig: {
-      warmup_min: 10,
-      cooldown_min: 5,
-      mainBlock: {
-        label: "Carrera continua",
-        metaTemplate: "{value} {unit_label}",
-        unit: "distance", // 'distance' o 'duration'
-        value: 10, // Valor por defecto
-        offset: 50,
-      },
+      blocks: [
+        { type: "warmup", value: 10, unit: "duration" },
+        { type: "run", label: "Carrera", metaTemplate: "{value} km", value: 5, unit: "distance", offset: 50 },
+        { type: "cooldown", value: 5, unit: "duration" },
+      ]
     },
   }
   view.value = "create"
 }
 
+function addBlockToCustomMission() {
+  newMissionData.value.planConfig.blocks.splice(-1, 0, {
+    type: "run",
+    label: "Nuevo Bloque",
+    metaTemplate: "{value} km",
+    value: 3,
+    unit: "distance",
+    offset: 60,
+  });
+}
+
 function saveNewMission() {
   if (!newMissionData.value) return
-
-  const missionToAdd = { ...newMissionData.value }
-
-  // El motor del plan usará 'param_value' para misiones personalizadas
-  missionToAdd.planConfig.mainBlock.param_value = missionToAdd.planConfig.mainBlock.value
-  delete missionToAdd.planConfig.mainBlock.value
-
-  // Añadir 'unit_label' para la plantilla meta
-  missionToAdd.planConfig.mainBlock.unit_label =
-    missionToAdd.planConfig.mainBlock.unit === "distance" ? "km" : "min"
-
-  state.missions.push(missionToAdd)
+  state.missions.push(JSON.parse(JSON.stringify(newMissionData.value)))
   view.value = "menu"
 }
 
@@ -466,115 +398,83 @@ const plan = computed(() => {
   if (!m || view.value !== "setup") return null
 
   const steps = []
-  const cfg = m.planConfig
-  const main = cfg.mainBlock
+  const blocks = m.planConfig.blocks || []
 
-  const warm = (min) => {
-    if (min === 0) return
-    const p = pace("warmup")
-    steps.push({ tag: "WARM-UP", label: "Calentamiento", meta: `${min} min · trote progresivo`, pace: p, km: (min * 60) / p, sec: min * 60, hex: "#39ff88" })
-  }
-  const cool = (min) => {
-    if (min === 0) return
-    const p = pace("cooldown")
-    steps.push({ tag: "COOL-DOWN", label: "Enfriamiento", meta: `${min} min · trote muy suave`, pace: p, km: (min * 60) / p, sec: min * 60, hex: "#35c1ff" })
-  }
-
-  // --- Motor de construcción del plan ---
-  warm(cfg.warmup_min)
-
-  // 1. TIPO: Rodaje simple (distancia o tiempo)
-  if (m.type === "simple_run") {
-    const p = Math.round((basePace.value + main.offset) * energy.value.mult)
-    // Las misiones personalizadas tienen 'param_value', las de por defecto usan 'param'
-    const value = main.param_value !== undefined ? main.param_value : state[main.param]
-    const sec = main.unit === "duration" ? value * 60 : value * p
-    const km = main.unit === "distance" ? value : sec / p
-    const meta = main.metaTemplate
-      .replace("{duration}", value)
-      .replace("{distance}", value)
-      .replace("{value}", value)
-      .replace("{unit_label}", main.unit_label || (main.unit === 'distance' ? 'km' : 'min'))
-
-    steps.push({ tag: "MAIN", label: main.label, meta, pace: p, km, sec, hex: m.hex })
-  }
-
-  // 2. TIPO: Intervalos (series, fartlek)
-  if (m.type === "interval") {
-    const p = {
-      work: Math.round((basePace.value + main.work_offset) * energy.value.mult),
-      rec: pace(main.rec_pace_offset),
+  blocks.forEach(block => {
+    const blockProcessor = {
+      warmup: (b) => {
+        const p = pace("warmup")
+        const sec = b.value * 60
+        steps.push({ tag: "WARM-UP", label: "Calentamiento", meta: `${b.value} min · trote progresivo`, pace: p, km: sec / p, sec, hex: "#39ff88" })
+      },
+      cooldown: (b) => {
+        const p = pace("cooldown")
+        const sec = b.value * 60
+        steps.push({ tag: "COOL-DOWN", label: "Enfriamiento", meta: `${b.value} min · trote muy suave`, pace: p, km: sec / p, sec, hex: "#35c1ff" })
+      },
+      run: (b) => {
+        const p = Math.round((basePace.value + b.offset) * energy.value.mult)
+        const value = b.value_param ? state[b.value_param] : b.value
+        const sec = b.unit === "duration" ? value * 60 : value * p
+        const km = b.unit === "distance" ? value : sec / p
+        const meta = b.metaTemplate.replace("{value}", value)
+        steps.push({ tag: "MAIN", label: b.label, meta, pace: p, km, sec, hex: m.hex })
+      },
+      interval: (b) => {
+        const p = { work: Math.round((basePace.value + b.work_offset) * energy.value.mult), rec: pace(b.rec_pace_offset) }
+        const reps = state[b.params.reps]
+        const dist_m = b.params.dist ? state[b.params.dist] : null
+        const work_s = b.params.work_s || (dist_m / 1000 * p.work)
+        const rec_s = b.params.rec_s
+        const total_work_s = reps * (dist_m ? (dist_m / 1000 * p.work) : work_s)
+        const total_rec_s = (reps - 1) * rec_s
+        const km = (total_work_s / p.work) + (total_rec_s / p.rec)
+        const sec = total_work_s + total_rec_s
+        const meta = b.metaTemplate.replace("{reps}", reps).replace("{dist}", dist_m).replace("{work_s}", work_s).replace("{rec_s}", rec_s)
+        steps.push({ tag: "MAIN", label: b.label, meta, pace: p.work, km, sec, hex: m.hex, recPace: p.rec })
+      },
+       progressive: (b) => {
+        const km_total = state[b.param]
+        const km_part = km_total / 3
+        const p1 = pace(b.offsets[0])
+        const p2 = pace(b.offsets[1])
+        const p3 = pace(b.offsets[2])
+        const sec = (km_part * p1) + (km_part * p2) + (km_part * p3)
+        const meta = `${km_total} km (de ${fmtPace(p1)} a ${fmtPace(p3)}/km)`
+        steps.push({ tag: "MAIN", label: b.label, meta, pace: Math.round(sec / km_total), km: km_total, sec, hex: m.hex })
+      },
+        hills: (b) => {
+        const rp = pace(b.rec_pace_offset)
+        const reps = state[b.params.reps]
+        const work_s = state[b.params.work_s]
+        const rec_s = work_s * b.params.rec_multiplier
+        const total_work_s = reps * work_s
+        const total_rec_s = (reps - 1) * rec_s
+        const km = total_rec_s / rp
+        const sec = total_work_s + total_rec_s
+        const meta = b.metaTemplate.replace('{reps}', reps).replace('{work_s}', work_s)
+        steps.push({ tag: 'MAIN', label: b.label, meta, pace: null, km, sec, hex: m.hex, recPace: rp })
+      },
+      pyramid: (b) => {
+        const p = Math.round((basePace.value + b.work_offset) * energy.value.mult)
+        const rp = pace(b.rec_pace_offset)
+        const work_s = b.params.steps_min.reduce((a, min) => a + min * 60, 0)
+        const rec_s = (b.params.steps_min.length - 1) * b.params.rec_s
+        const km = (work_s / p) + (rec_s / rp)
+        const sec = work_s + rec_s
+        const meta = b.metaTemplate.replace('{rec_s}', b.params.rec_s)
+        steps.push({ tag: 'MAIN', label: b.label, meta, pace: p, km, sec, hex: m.hex, recPace: rp })
+      },
+      extra: (b) => {
+        steps.push({ tag: "EXTRA", ...b })
+      },
     }
-    const reps = state[main.params.reps]
-    const work_s = main.params.work_s || state.seriesDist / 1000 * p.work
-    const dist_m = main.params.dist ? state[main.params.dist] : null
-    const rec_s = main.params.rec_s
-    
-    const total_work_s = reps * (dist_m ? (dist_m / 1000 * p.work) : work_s)
-    const total_rec_s = (reps - 1) * rec_s
-    
-    const km = (total_work_s / p.work) + (total_rec_s / p.rec)
-    const sec = total_work_s + total_rec_s
-    
-    const meta = main.metaTemplate
-      .replace("{reps}", reps)
-      .replace("{dist}", dist_m)
-      .replace("{work_s}", work_s)
-      .replace("{rec_s}", rec_s)
-      
-    steps.push({ tag: "MAIN", label: main.label, meta, pace: p.work, km, sec, hex: m.hex, recPace: p.rec })
-  }
-  
-  // 3. TIPO: Cuestas
-    if (m.type === 'hills') {
-    const rp = pace(main.rec_pace_offset)
-    const reps = state[main.params.reps]
-    const work_s = state[main.params.work_s]
-    const rec_s = work_s * main.params.rec_multiplier
 
-    const total_work_s = reps * work_s
-    const total_rec_s = (reps - 1) * rec_s
-    const km = total_rec_s / rp
-    const sec = total_work_s + total_rec_s
+    if (blockProcessor[block.type]) {
+      blockProcessor[block.type](block)
+    }
+  })
 
-    const meta = main.metaTemplate.replace('{reps}', reps).replace('{work_s}', work_s)
-    steps.push({ tag: 'MAIN', label: main.label, meta, pace: null, km, sec, hex: m.hex, recPace: rp })
-  }
-  
-  // 4. TIPO: Pirámide
-  if (m.type === 'pyramid') {
-    const p = Math.round((basePace.value + main.work_offset) * energy.value.mult)
-    const rp = pace(main.rec_pace_offset)
-    const work_s = main.params.steps_min.reduce((a, min) => a + min * 60, 0)
-    const rec_s = (main.params.steps_min.length - 1) * main.params.rec_s
-
-    const km = (work_s / p) + (rec_s / rp)
-    const sec = work_s + rec_s
-    const meta = main.metaTemplate.replace('{rec_s}', main.params.rec_s)
-    steps.push({ tag: 'MAIN', label: main.label, meta, pace: p, km, sec, hex: m.hex, recPace: rp })
-  }
-
-  // 5. TIPO: Progresiva
-  if (m.type === "progresiva") {
-    const km_total = state[main.param]
-    const km_part = km_total / 3
-    const p1 = pace(main.offsets[0])
-    const p2 = pace(main.offsets[1])
-    const p3 = pace(main.offsets[2])
-    const sec = (km_part * p1) + (km_part * p2) + (km_part * p3)
-    const meta = `${km_total} km (de ${fmtPace(p1)} a ${fmtPace(p3)}/km)`
-    steps.push({ tag: "MAIN", label: main.label, meta, pace: Math.round(sec / km_total), km: km_total, sec, hex: m.hex })
-  }
-
-
-  cool(cfg.cooldown_min)
-
-  // --- Bloques extra (regenerativo) ---
-  if (cfg.extraBlocks) {
-    steps.push(...cfg.extraBlocks)
-  }
-
-  // --- Sumatorios y retorno ---
   const totalKm = steps.reduce((a, s) => a + s.km, 0)
   const totalSec = steps.reduce((a, s) => a + s.sec, 0)
 
@@ -769,41 +669,66 @@ function launch() {
         <!--  ESTADO NUEVO · FORMULARIO DE CREACIÓN                         -->
         <!-- ============================================================== -->
         <div v-else-if="view === 'create' && newMissionData" class="p-4">
-          <h1 class="font-display text-lg font-black tracking-wider text-ink mb-3">
-            NUEVA<span class="text-neon-green"> MISIÓN</span>
-          </h1>
-          <div class="flex flex-col gap-3 text-sm">
-            <!-- Nombre y Subtítulo -->
-            <input v-model="newMissionData.name" placeholder="Nombre (ej. FONDO FÁCIL)" class="form-input">
-            <input v-model="newMissionData.sub" placeholder="Subtítulo (ej. 15km a R1)" class="form-input">
-            <!-- Icono y Color -->
+          <div class="flex justify-between items-center mb-3">
+            <h1 class="font-display text-lg font-black tracking-wider text-ink">
+              EDITAR<span class="text-neon-green"> MISIÓN</span>
+            </h1>
+          </div>
+          <div class="flex flex-col gap-3 text-sm max-h-[60vh] overflow-y-auto pr-2">
+            <!-- Campos generales de la misión -->
             <div class="grid grid-cols-2 gap-2">
-              <input v-model="newMissionData.icon" placeholder="Icono (ej. 🐢)" class="form-input">
-              <input v-model="newMissionData.hex" placeholder="Color Hex (ej. #35c1ff)" class="form-input">
+              <input v-model="newMissionData.name" placeholder="Nombre" class="form-input">
+              <input v-model="newMissionData.icon" placeholder="Icono" class="form-input">
             </div>
-            <!-- Unidad y Valor -->
-            <div class="grid grid-cols-2 gap-2">
-              <select v-model="newMissionData.planConfig.mainBlock.unit" class="form-input">
-                <option value="distance">Distancia (km)</option>
-                <option value="duration">Duración (min)</option>
-              </select>
-              <input v-model.number="newMissionData.planConfig.mainBlock.value" type="number" placeholder="Valor" class="form-input">
+            <input v-model="newMissionData.sub" placeholder="Subtítulo" class="form-input">
+            <hr class="border-line my-2">
+
+            <!-- Editor de bloques dinámico -->
+            <div v-for="(block, index) in newMissionData.planConfig.blocks" :key="index" class="p-3 rounded-lg border border-line bg-panel-2">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-bold tracking-widest text-muted">{{ block.type.toUpperCase() }}</span>
+                <button @click="newMissionData.planConfig.blocks.splice(index, 1)" class="h-5 w-5 bg-neon-red text-oled rounded-full text-xs font-bold">X</button>
+              </div>
+
+              <!-- Controles para Warmup y Cooldown -->
+              <template v-if="block.type === 'warmup' || block.type === 'cooldown'">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs text-muted">Duración (min)</span>
+                  <input v-model.number="block.value" type="number" class="form-input w-full">
+                </div>
+              </template>
+
+              <!-- Controles para Bloque de Carrera -->
+              <template v-if="block.type === 'run'">
+                <div class="flex flex-col gap-2">
+                  <div class="grid grid-cols-2 gap-2">
+                    <select v-model="block.unit" class="form-input">
+                      <option value="distance">Distancia</option>
+                      <option value="duration">Duración</option>
+                    </select>
+                    <div class="flex items-center gap-1">
+                      <input v-model.number="block.value" type="number" class="form-input">
+                      <span class="text-xs text-muted">{{ block.unit === 'distance' ? 'km' : 'min' }}</span>
+                    </div>
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <label class="text-xs text-muted">Ritmo: {{ block.offset >= 0 ? '+' : '' }}{{ block.offset }}s (vs base)</label>
+                    <input v-model.number="block.offset" type="range" min="-30" max="90" class="w-full">
+                  </div>
+                </div>
+              </template>
             </div>
-            <!-- Offset de Ritmo -->
-            <div class="flex flex-col gap-1">
-              <label class="text-xs text-muted">Offset de Ritmo ({{newMissionData.planConfig.mainBlock.offset}}s)</label>
-              <input v-model.number="newMissionData.planConfig.mainBlock.offset" type="range" min="-30" max="90" class="w-full">
-            </div>
-            <!-- Warmup y Cooldown -->
-            <div class="grid grid-cols-2 gap-2">
-                <input v-model.number="newMissionData.planConfig.warmup_min" type="number" placeholder="Warmup (min)" class="form-input">
-                <input v-model.number="newMissionData.planConfig.cooldown_min" type="number" placeholder="Cooldown (min)" class="form-input">
-            </div>
-            <!-- Botones de Acción -->
-            <div class="mt-2 grid grid-cols-2 gap-3">
-              <button @click="view = 'menu'" class="press-btn-secondary">Cancelar</button>
-              <button @click="saveNewMission" class="press-btn-primary">Guardar</button>
-            </div>
+
+            <!-- Botón para añadir nuevo bloque -->
+            <button @click="addBlockToCustomMission" class="press-btn-secondary text-sm py-2 mt-2">
+              + Añadir Bloque de Carrera
+            </button>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="mt-4 grid grid-cols-2 gap-3">
+            <button @click="view = 'menu'" class="press-btn-secondary">Cancelar</button>
+            <button @click="saveNewMission" class="press-btn-primary">Guardar</button>
           </div>
         </div>
 
