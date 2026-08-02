@@ -15,16 +15,215 @@ import { ref, computed, reactive, watch, onMounted } from "vue"
 /*  CATÁLOGO DE MISIONES (menú de juego)                                      */
 /* -------------------------------------------------------------------------- */
 const MISSIONS = [
-  // MISIONES con offset principal y tip
-  { key: "regenerar", name: "REGENERAR", sub: "Regenerativo · suave", icon: "🟢", hex: "#39ff88", offset: 75, tip: "Ritmo de charla. Si no puedes hablar, vas demasiado rápido. Hoy toca sumar, no sufrir." },
-  { key: "suave", name: "RITMO SUAVE", sub: "Aeróbico · base", icon: "🔵", hex: "#35c1ff", offset: 48, tip: "Corre relajado y controla la respiración. Termina con ganas de hacer un km más." },
-  { key: "series", name: "SERIES", sub: "Intervalos · VO2", icon: "⚡", hex: "#ff4b3e", offset: -18, config: { distances: [400, 800, 1000] }, tip: "Empieza controlado: la primera serie debe parecerte fácil. Corre las últimas igual que las primeras." },
-  { key: "tempo", name: "TEMPO", sub: "Umbral · sostenido", icon: "🔥", hex: "#ff8a1e", offset: 12, tip: "Ritmo 'cómodamente duro': sostenible pero exigente. No lo conviertas en una carrera." },
-  { key: "fartlek", name: "FARTLEK", sub: "Cambios de ritmo", icon: "🌀", hex: "#b06bff", offset: -12, tip: "Juega con el ritmo. Exprime las partes rápidas y recupera DE VERDAD en las suaves." },
-  { key: "tirada-larga", name: "TIRADA LARGA", sub: "Resistencia · fondo", icon: "🔋", hex: "#ffc700", offset: 55, tip: "La clave es la consistencia. Mantén un ritmo que te permita conversar. No te obsesiones con la velocidad, hoy sumamos kilómetros." },
-  { key: "progresiva", name: "PROGRESIVA", sub: "De menos a más", icon: "📈", hex: "#ff6b00", tip: "Paciencia al principio. La primera parte debe sentirse muy cómoda. Concéntrate en apretar de verdad solo en el último tercio." },
-  { key: "cuestas", name: "CUESTAS", sub: "Fuerza · potencia", icon: "⛰️", hex: "#d9334a", config: { durations: [45, 60, 90] }, tip: "Ataca la subida con buena forma: mirada al frente, braceo activo. La recuperación es clave, baja trotando muy suave para estar listo para la siguiente." },
-  { key: "piramide", name: "PIRÁMIDE", sub: "Intervalos · control", icon: "🔺", hex: "#8a42e2", offset: -18, tip: "Mantén la calma en la subida de la pirámide; no gastes toda la energía. El objetivo es hacer la segunda mitad tan fuerte como la primera." },
+  {
+    key: "regenerar",
+    name: "REGENERAR",
+    sub: "Regenerativo · suave",
+    icon: "🟢",
+    hex: "#39ff88",
+    tip: "Ritmo de charla. Si no puedes hablar, vas demasiado rápido. Hoy toca sumar, no sufrir.",
+    type: "simple_run",
+    planConfig: {
+      warmup_min: 0,
+      cooldown_min: 0,
+      mainBlock: {
+        label: "Rodaje regenerativo",
+        metaTemplate: "{duration}' continuos",
+        unit: "duration", // 'duration' o 'distance'
+        param: "regenMin", // clave en state
+        offset: 75,
+      },
+      extraBlocks: [
+        {
+          tag: "EXTRA",
+          label: "Movilidad + estiramientos",
+          meta: "5 min · suelta piernas",
+          pace: null,
+          km: 0,
+          sec: 300,
+          hex: "#ffe14d",
+        },
+      ],
+    },
+  },
+  {
+    key: "suave",
+    name: "RITMO SUAVE",
+    sub: "Aeróbico · base",
+    icon: "🔵",
+    hex: "#35c1ff",
+    tip: "Corre relajado y controla la respiración. Termina con ganas de hacer un km más.",
+    type: "simple_run",
+    planConfig: {
+      warmup_min: 8,
+      cooldown_min: 5,
+      mainBlock: {
+        label: "Rodaje aeróbico",
+        metaTemplate: "{distance} km continuos",
+        unit: "distance",
+        param: "aerobicKm",
+        offset: 48,
+      },
+    },
+  },
+  {
+    key: "series",
+    name: "SERIES",
+    sub: "Intervalos · VO2",
+    icon: "⚡",
+    hex: "#ff4b3e",
+    tip: "Empieza controlado: la primera serie debe parecerte fácil. Corre las últimas igual que las primeras.",
+    type: "interval",
+    planConfig: {
+      warmup_min: 12,
+      cooldown_min: 8,
+      mainBlock: {
+        label: "Bloque de series",
+        metaTemplate: "{reps} × {dist}m · rec {rec_s}'' trote",
+        work_offset: -18,
+        rec_pace_offset: "recovery",
+        params: {
+          reps: "seriesReps",
+          dist: "seriesDist",
+          rec_s: 90,
+        },
+      },
+      config: {
+        distances: [400, 800, 1000],
+      },
+    },
+  },
+  {
+    key: "tempo",
+    name: "TEMPO",
+    sub: "Umbral · sostenido",
+    icon: "🔥",
+    hex: "#ff8a1e",
+    tip: "Ritmo 'cómodamente duro': sostenible pero exigente. No lo conviertas en una carrera.",
+    type: "simple_run",
+    planConfig: {
+      warmup_min: 12,
+      cooldown_min: 8,
+      mainBlock: {
+        label: "Bloque tempo continuo",
+        metaTemplate: "{duration}' a umbral",
+        unit: "duration",
+        param: "tempoMin",
+        offset: 12,
+      },
+    },
+  },
+  {
+    key: "fartlek",
+    name: "FARTLEK",
+    sub: "Cambios de ritmo",
+    icon: "🌀",
+    hex: "#b06bff",
+    tip: "Juega con el ritmo. Exprime las partes rápidas y recupera DE VERDAD en las suaves.",
+    type: "interval",
+    planConfig: {
+      warmup_min: 10,
+      cooldown_min: 8,
+      mainBlock: {
+        label: "Bloque fartlek",
+        metaTemplate: "{reps} × ({work_s}'' fuerte / {rec_s}'' suave)",
+        work_offset: -12,
+        rec_pace_offset: "fartlekSlow",
+        params: {
+          reps: "fartlekReps",
+          work_s: 60,
+          rec_s: 90,
+        },
+      },
+    },
+  },
+  {
+    key: "tirada-larga",
+    name: "TIRADA LARGA",
+    sub: "Resistencia · fondo",
+    icon: "🔋",
+    hex: "#ffc700",
+    tip: "La clave es la consistencia. Mantén un ritmo que te permita conversar. No te obsesiones con la velocidad, hoy sumamos kilómetros.",
+    type: "simple_run",
+    planConfig: {
+      warmup_min: 5,
+      cooldown_min: 5,
+      mainBlock: {
+        label: "Tirada larga",
+        metaTemplate: "{distance} km a ritmo sostenido",
+        unit: "distance",
+        param: "longRunKm",
+        offset: 55,
+      },
+    },
+  },
+  {
+    key: "progresiva",
+    name: "PROGRESIVA",
+    sub: "De menos a más",
+    icon: "📈",
+    hex: "#ff6b00",
+    tip: "Paciencia al principio. La primera parte debe sentirse muy cómoda. Concéntrate en apretar de verdad solo en el último tercio.",
+    type: "progressive",
+    planConfig: {
+      warmup_min: 10,
+      cooldown_min: 8,
+      mainBlock: {
+        label: "Bloque progresivo",
+        param: "progressiveKm",
+        offsets: ["prog1", "prog2", "prog3"],
+      },
+    },
+  },
+  {
+    key: "cuestas",
+    name: "CUESTAS",
+    sub: "Fuerza · potencia",
+    icon: "⛰️",
+    hex: "#d9334a",
+    tip: "Ataca la subida con buena forma: mirada al frente, braceo activo. La recuperación es clave, baja trotando muy suave para estar listo para la siguiente.",
+    type: "hills",
+    planConfig: {
+      warmup_min: 15,
+      cooldown_min: 10,
+      mainBlock: {
+        label: "Bloque de cuestas",
+        metaTemplate: "{reps} × {work_s}s · rec. bajada",
+        rec_pace_offset: "recovery",
+        params: {
+          reps: "hillReps",
+          work_s: "hillDuration",
+          rec_multiplier: 2,
+        },
+      },
+      config: {
+        durations: [45, 60, 90],
+      },
+    },
+  },
+  {
+    key: "piramide",
+    name: "PIRÁMIDE",
+    sub: "Intervalos · control",
+    icon: "🔺",
+    hex: "#8a42e2",
+    tip: "Mantén la calma en la subida de la pirámide; no gastes toda la energía. El objetivo es hacer la segunda mitad tan fuerte como la primera.",
+    type: "pyramid",
+    planConfig: {
+      warmup_min: 12,
+      cooldown_min: 10,
+      mainBlock: {
+        label: "Bloque pirámide",
+        metaTemplate: "1-2-3-4-3-2-1 min · rec {rec_s}s",
+        work_offset: -18,
+        rec_pace_offset: "recovery",
+        params: {
+          steps_min: [1, 2, 3, 4, 3, 2, 1],
+          rec_s: 90,
+        },
+      },
+    },
+  },
 ]
 
 // El estado que se guardará en localStorage
@@ -140,14 +339,14 @@ const stepProgressive = clamp("progressiveKm", 6, 18, 2)
 const stepHillReps = clamp("hillReps", 4, 12, 1)
 
 function cycleHillDuration(dir) {
-  const options = activeMission.value.config.durations
+  const options = activeMission.value.planConfig.config.durations
   const i = options.indexOf(state.hillDuration)
   const n = i + dir
   if (n >= 0 && n < options.length) state.hillDuration = options[n]
 }
 
 function cycleSeriesDist(dir) {
-  const options = activeMission.value.config.distances
+  const options = activeMission.value.planConfig.config.distances
   const i = options.indexOf(state.seriesDist)
   const n = i + dir
   if (n >= 0 && n < options.length) state.seriesDist = options[n]
@@ -207,212 +406,112 @@ function stepBaseTime(dir) {
 // step: { tag, label, meta, pace, km, sec, hex }
 const plan = computed(() => {
   const m = activeMission.value
-  // OPTIMIZACIÓN: No calcular el plan si no estamos en la vista de setup
   if (!m || view.value !== "setup") return null
+
   const steps = []
+  const cfg = m.planConfig
+  const main = cfg.mainBlock
 
   const warm = (min) => {
+    if (min === 0) return
     const p = pace("warmup")
-    steps.push({
-      tag: "WARM-UP",
-      label: "Calentamiento",
-      meta: `${min} min · trote progresivo`,
-      pace: p,
-      km: (min * 60) / p,
-      sec: min * 60,
-      hex: "#39ff88",
-    })
+    steps.push({ tag: "WARM-UP", label: "Calentamiento", meta: `${min} min · trote progresivo`, pace: p, km: (min * 60) / p, sec: min * 60, hex: "#39ff88" })
   }
   const cool = (min) => {
+    if (min === 0) return
     const p = pace("cooldown")
-    steps.push({
-      tag: "COOL-DOWN",
-      label: "Enfriamiento",
-      meta: `${min} min · trote muy suave`,
-      pace: p,
-      km: (min * 60) / p,
-      sec: min * 60,
-      hex: "#35c1ff",
-    })
+    steps.push({ tag: "COOL-DOWN", label: "Enfriamiento", meta: `${min} min · trote muy suave`, pace: p, km: (min * 60) / p, sec: min * 60, hex: "#35c1ff" })
   }
 
-  if (m.key === "regenerar") {
-    const p = Math.round((basePace.value + m.offset) * energy.value.mult)
-    const sec = state.regenMin * 60
-    steps.push({
-      tag: "MAIN",
-      label: "Rodaje regenerativo",
-      meta: `${state.regenMin} min continuos`,
-      pace: p,
-      km: sec / p,
-      sec,
-      hex: m.hex,
-    })
-    steps.push({
-      tag: "EXTRA",
-      label: "Movilidad + estiramientos",
-      meta: "5 min · suelta piernas",
-      pace: null,
-      km: 0,
-      sec: 300,
-      hex: "#ffe14d",
-    })
+  // --- Motor de construcción del plan ---
+  warm(cfg.warmup_min)
+
+  // 1. TIPO: Rodaje simple (distancia o tiempo)
+  if (m.type === "simple_run") {
+    const p = Math.round((basePace.value + main.offset) * energy.value.mult)
+    const value = state[main.param]
+    const sec = main.unit === "duration" ? value * 60 : value * p
+    const km = main.unit === "distance" ? value : sec / p
+    const meta = main.metaTemplate.replace("{duration}", value).replace("{distance}", value)
+    steps.push({ tag: "MAIN", label: main.label, meta, pace: p, km, sec, hex: m.hex })
   }
 
-  if (m.key === "suave") {
-    warm(8)
-    const p = Math.round((basePace.value + m.offset) * energy.value.mult)
-    const sec = state.aerobicKm * p
-    steps.push({
-      tag: "MAIN",
-      label: "Rodaje aeróbico",
-      meta: `${state.aerobicKm} km continuos`,
-      pace: p,
-      km: state.aerobicKm,
-      sec,
-      hex: m.hex,
-    })
-    cool(5)
+  // 2. TIPO: Intervalos (series, fartlek)
+  if (m.type === "interval") {
+    const p = {
+      work: Math.round((basePace.value + main.work_offset) * energy.value.mult),
+      rec: pace(main.rec_pace_offset),
+    }
+    const reps = state[main.params.reps]
+    const work_s = main.params.work_s || state.seriesDist / 1000 * p.work
+    const dist_m = main.params.dist ? state[main.params.dist] : null
+    const rec_s = main.params.rec_s
+    
+    const total_work_s = reps * (dist_m ? (dist_m / 1000 * p.work) : work_s)
+    const total_rec_s = (reps - 1) * rec_s
+    
+    const km = (total_work_s / p.work) + (total_rec_s / p.rec)
+    const sec = total_work_s + total_rec_s
+    
+    const meta = main.metaTemplate
+      .replace("{reps}", reps)
+      .replace("{dist}", dist_m)
+      .replace("{work_s}", work_s)
+      .replace("{rec_s}", rec_s)
+      
+    steps.push({ tag: "MAIN", label: main.label, meta, pace: p.work, km, sec, hex: m.hex, recPace: p.rec })
+  }
+  
+  // 3. TIPO: Cuestas
+    if (m.type === 'hills') {
+    const rp = pace(main.rec_pace_offset)
+    const reps = state[main.params.reps]
+    const work_s = state[main.params.work_s]
+    const rec_s = work_s * main.params.rec_multiplier
+
+    const total_work_s = reps * work_s
+    const total_rec_s = (reps - 1) * rec_s
+    const km = total_rec_s / rp
+    const sec = total_work_s + total_rec_s
+
+    const meta = main.metaTemplate.replace('{reps}', reps).replace('{work_s}', work_s)
+    steps.push({ tag: 'MAIN', label: main.label, meta, pace: null, km, sec, hex: m.hex, recPace: rp })
+  }
+  
+  // 4. TIPO: Pirámide
+  if (m.type === 'pyramid') {
+    const p = Math.round((basePace.value + main.work_offset) * energy.value.mult)
+    const rp = pace(main.rec_pace_offset)
+    const work_s = main.params.steps_min.reduce((a, min) => a + min * 60, 0)
+    const rec_s = (main.params.steps_min.length - 1) * main.params.rec_s
+
+    const km = (work_s / p) + (rec_s / rp)
+    const sec = work_s + rec_s
+    const meta = main.metaTemplate.replace('{rec_s}', main.params.rec_s)
+    steps.push({ tag: 'MAIN', label: main.label, meta, pace: p, km, sec, hex: m.hex, recPace: rp })
   }
 
-  if (m.key === "series") {
-    warm(12)
-    const wp = Math.round((basePace.value + m.offset) * energy.value.mult)
-    const rp = pace("recovery")
-    const workKm = (state.seriesReps * state.seriesDist) / 1000
-    const workSec = workKm * wp
-    const recSecEach = 90
-    const recTotalSec = state.seriesReps * recSecEach
-    const recKm = recTotalSec / rp
-    steps.push({
-      tag: "MAIN",
-      label: "Bloque de series",
-      meta: `${state.seriesReps} × ${state.seriesDist}m · rec 90'' trote`,
-      pace: wp,
-      km: workKm + recKm,
-      sec: workSec + recTotalSec,
-      hex: m.hex,
-      recPace: rp,
-    })
-    cool(8)
+  // 5. TIPO: Progresiva
+  if (m.type === "progresiva") {
+    const km_total = state[main.param]
+    const km_part = km_total / 3
+    const p1 = pace(main.offsets[0])
+    const p2 = pace(main.offsets[1])
+    const p3 = pace(main.offsets[2])
+    const sec = (km_part * p1) + (km_part * p2) + (km_part * p3)
+    const meta = `${km_total} km (de ${fmtPace(p1)} a ${fmtPace(p3)}/km)`
+    steps.push({ tag: "MAIN", label: main.label, meta, pace: Math.round(sec / km_total), km: km_total, sec, hex: m.hex })
   }
 
-  if (m.key === "tempo") {
-    warm(12)
-    const p = Math.round((basePace.value + m.offset) * energy.value.mult)
-    const sec = state.tempoMin * 60
-    steps.push({
-      tag: "MAIN",
-      label: "Bloque tempo continuo",
-      meta: `${state.tempoMin} min a umbral`,
-      pace: p,
-      km: sec / p,
-      sec,
-      hex: m.hex,
-    })
-    cool(8)
+
+  cool(cfg.cooldown_min)
+
+  // --- Bloques extra (regenerativo) ---
+  if (cfg.extraBlocks) {
+    steps.push(...cfg.extraBlocks)
   }
 
-  if (m.key === "fartlek") {
-    warm(10)
-    const fp = Math.round((basePace.value + m.offset) * energy.value.mult)
-    const sp = pace("fartlekSlow")
-    const fastSec = state.fartlekReps * 60
-    const slowSec = state.fartlekReps * 90
-    const fastKm = fastSec / fp
-    const slowKm = slowSec / sp
-    steps.push({
-      tag: "MAIN",
-      label: "Bloque fartlek",
-      meta: `${state.fartlekReps} × (1' fuerte / 1'30'' suave)`,
-      pace: fp,
-      km: fastKm + slowKm,
-      sec: fastSec + slowSec,
-      hex: m.hex,
-      recPace: sp,
-    })
-    cool(8)
-  }
-
-  if (m.key === "tirada-larga") {
-    warm(5)
-    const p = Math.round((basePace.value + m.offset) * energy.value.mult)
-    const sec = state.longRunKm * p
-    steps.push({
-      tag: "MAIN",
-      label: "Tirada larga",
-      meta: `${state.longRunKm} km a ritmo sostenido`,
-      pace: p,
-      km: state.longRunKm,
-      sec,
-      hex: m.hex,
-    })
-    cool(5)
-  }
-
-  if (m.key === "progresiva") {
-    warm(10)
-    const p1 = pace("prog1")
-    const p2 = pace("prog2")
-    const p3 = pace("prog3")
-    const km1 = state.progressiveKm / 3
-    const km2 = state.progressiveKm / 3
-    const km3 = state.progressiveKm / 3
-    const sec = km1 * p1 + km2 * p2 + km3 * p3
-    steps.push({
-      tag: "MAIN",
-      label: "Bloque progresivo",
-      meta: `${state.progressiveKm} km (de ${fmtPace(p1)} a ${fmtPace(p3)}/km)`,
-      pace: Math.round(sec / state.progressiveKm), // Ritmo medio para display
-      km: state.progressiveKm,
-      sec,
-      hex: m.hex,
-    })
-    cool(8)
-  }
-
-  if (m.key === "cuestas") {
-    warm(15)
-    const rp = pace("recovery")
-    const workSec = state.hillReps * state.hillDuration
-    // Se asume una recuperación (bajada) del doble de la subida
-    const recSec = workSec * 2
-    const recKm = recSec / rp
-    steps.push({
-      tag: "MAIN",
-      label: "Bloque de cuestas",
-      meta: `${state.hillReps} × ${state.hillDuration}s · rec. bajada`,
-      pace: null, // El ritmo en cuesta no es relevante
-      km: recKm, // Solo contamos los km de recuperación
-      sec: workSec + recSec,
-      hex: m.hex,
-      recPace: rp,
-    })
-    cool(10)
-  }
-
-  if (m.key === "piramide") {
-    warm(12)
-    const p = Math.round((basePace.value + m.offset) * energy.value.mult)
-    const rp = pace("recovery")
-    const pyramidSteps = [1, 2, 3, 4, 3, 2, 1] // en minutos
-    const workSec = pyramidSteps.reduce((a, min) => a + min * 60, 0)
-    const workKm = workSec / p
-    const recTotalSec = (pyramidSteps.length - 1) * 90 // 90s rec
-    const recKm = recTotalSec / rp
-    steps.push({
-      tag: "MAIN",
-      label: "Bloque pirámide",
-      meta: "1-2-3-4-3-2-1 min · rec 90s",
-      pace: p,
-      km: workKm + recKm,
-      sec: workSec + recTotalSec,
-      hex: m.hex,
-      recPace: rp,
-    })
-    cool(10)
-  }
-
+  // --- Sumatorios y retorno ---
   const totalKm = steps.reduce((a, s) => a + s.km, 0)
   const totalSec = steps.reduce((a, s) => a + s.sec, 0)
 
