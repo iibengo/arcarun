@@ -240,13 +240,15 @@ const missionKey = ref(null)
 // Estado para el formulario de creación de misiones
 const newMissionData = ref(null)
 
+const PREDEFINED_COLORS = ["#39ff88", "#35c1ff", "#ff4b3e", "#ff8a1e", "#b06bff", "#ffc700", "#d9334a", "#e0e0e0"]
+
 function showCreateForm() {
   newMissionData.value = {
     key: `custom_${Date.now()}`,
-    name: "CUSTOM",
+    name: "Carrera",
     sub: "A medida",
-    icon: "🧑‍🚀",
-    hex: "#e0e0e0",
+    icon: "👟",
+    hex: PREDEFINED_COLORS[Math.floor(Math.random() * PREDEFINED_COLORS.length)],
     tip: "¡Buen entrenamiento!",
     type: "custom",
     planConfig: {
@@ -260,6 +262,17 @@ function showCreateForm() {
   view.value = "create"
 }
 
+function cycleNewMissionColor() {
+  const currentIndex = PREDEFINED_COLORS.indexOf(newMissionData.value.hex)
+  const nextIndex = (currentIndex + 1) % PREDEFINED_COLORS.length
+  newMissionData.value.hex = PREDEFINED_COLORS[nextIndex]
+}
+
+function removeBlockFromCustomMission(index) {
+  if (newMissionData.value.planConfig.blocks.length > 1) {
+    newMissionData.value.planConfig.blocks.splice(index, 1)
+  }
+}
 function addBlockToCustomMission() {
   newMissionData.value.planConfig.blocks.splice(-1, 0, {
     type: "run",
