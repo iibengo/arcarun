@@ -39,13 +39,13 @@ function debounce(fn, delay) {
 }
 
 // Cargar estado desde localStorage al inicio
-const savedState = null;//localStorage.getItem("runArcadeState")
+const savedState = localStorage.getItem("runArcadeState")
 if (savedState) {
   Object.assign(state, JSON.parse(savedState))
 }
 
 const saveState = debounce((newState) => {
-  //localStorage.setItem("runArcadeState", JSON.stringify(newState))
+  localStorage.setItem("runArcadeState", JSON.stringify(newState))
 }, 400) // 400ms de espera
 
 // Guardar estado en localStorage cada vez que cambie
