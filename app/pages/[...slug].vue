@@ -11,6 +11,22 @@ import "./style.css"
    ========================================================================== */
 import { ref, computed, reactive, watch, onMounted } from "vue"
 
+/* -------------------------------------------------------------------------- */
+/*  CATÁLOGO DE MISIONES (menú de juego)                                      */
+/* -------------------------------------------------------------------------- */
+const MISSIONS = [
+  // MISIONES con offset principal y tip
+  { key: "regenerar", name: "REGENERAR", sub: "Regenerativo · suave", icon: "🟢", hex: "#39ff88", offset: 75, tip: "Ritmo de charla. Si no puedes hablar, vas demasiado rápido. Hoy toca sumar, no sufrir." },
+  { key: "suave", name: "RITMO SUAVE", sub: "Aeróbico · base", icon: "🔵", hex: "#35c1ff", offset: 48, tip: "Corre relajado y controla la respiración. Termina con ganas de hacer un km más." },
+  { key: "series", name: "SERIES", sub: "Intervalos · VO2", icon: "⚡", hex: "#ff4b3e", offset: -18, config: { distances: [400, 800, 1000] }, tip: "Empieza controlado: la primera serie debe parecerte fácil. Corre las últimas igual que las primeras." },
+  { key: "tempo", name: "TEMPO", sub: "Umbral · sostenido", icon: "🔥", hex: "#ff8a1e", offset: 12, tip: "Ritmo 'cómodamente duro': sostenible pero exigente. No lo conviertas en una carrera." },
+  { key: "fartlek", name: "FARTLEK", sub: "Cambios de ritmo", icon: "🌀", hex: "#b06bff", offset: -12, tip: "Juega con el ritmo. Exprime las partes rápidas y recupera DE VERDAD en las suaves." },
+  { key: "tirada-larga", name: "TIRADA LARGA", sub: "Resistencia · fondo", icon: "🔋", hex: "#ffc700", offset: 55, tip: "La clave es la consistencia. Mantén un ritmo que te permita conversar. No te obsesiones con la velocidad, hoy sumamos kilómetros." },
+  { key: "progresiva", name: "PROGRESIVA", sub: "De menos a más", icon: "📈", hex: "#ff6b00", tip: "Paciencia al principio. La primera parte debe sentirse muy cómoda. Concéntrate en apretar de verdad solo en el último tercio." },
+  { key: "cuestas", name: "CUESTAS", sub: "Fuerza · potencia", icon: "⛰️", hex: "#d9334a", config: { durations: [45, 60, 90] }, tip: "Ataca la subida con buena forma: mirada al frente, braceo activo. La recuperación es clave, baja trotando muy suave para estar listo para la siguiente." },
+  { key: "piramide", name: "PIRÁMIDE", sub: "Intervalos · control", icon: "🔺", hex: "#8a42e2", offset: -18, tip: "Mantén la calma en la subida de la pirámide; no gastes toda la energía. El objetivo es hacer la segunda mitad tan fuerte como la primera." },
+]
+
 // El estado que se guardará en localStorage
 const state = reactive({
   time10k: 2400,
@@ -26,6 +42,7 @@ const state = reactive({
   progressiveKm: 10,
   hillReps: 8,
   hillDuration: 60,
+  missions: MISSIONS,
 })
 
 // --- Lógica de persistencia en localStorage con Debounce ---
@@ -85,22 +102,7 @@ const view = ref("menu")
 // Misión seleccionada (clave)
 const missionKey = ref(null)
 
-/* -------------------------------------------------------------------------- */
-/*  CATÁLOGO DE MISIONES (menú de juego)                                      */
-/* -------------------------------------------------------------------------- */
-const MISSIONS = [
-  { key: "regenerar", name: "REGENERAR", sub: "Regenerativo · suave", icon: "🟢", hex: "#39ff88" },
-  { key: "suave", name: "RITMO SUAVE", sub: "Aeróbico · base", icon: "🔵", hex: "#35c1ff" },
-  { key: "series", name: "SERIES", sub: "Intervalos · VO2", icon: "⚡", hex: "#ff4b3e" },
-  { key: "tempo", name: "TEMPO", sub: "Umbral · sostenido", icon: "🔥", hex: "#ff8a1e" },
-  { key: "fartlek", name: "FARTLEK", sub: "Cambios de ritmo", icon: "🌀", hex: "#b06bff" },
-  { key: "tirada-larga", name: "TIRADA LARGA", sub: "Resistencia · fondo", icon: "🔋", hex: "#ffc700" },
-  { key: "progresiva", name: "PROGRESIVA", sub: "De menos a más", icon: "📈", hex: "#ff6b00" },
-  { key: "cuestas", name: "CUESTAS", sub: "Fuerza · potencia", icon: "⛰️", hex: "#d9334a" },
-  { key: "piramide", name: "PIRÁMIDE", sub: "Intervalos · control", icon: "🔺", hex: "#8a42e2" },
-]
-
-const activeMission = computed(() => MISSIONS.find((m) => m.key === missionKey.value) || null)
+const activeMission = computed(() => state.missions.find((m) => m.key === missionKey.value) || null)
 
 /* -------------------------------------------------------------------------- */
 /*  ENERGÍA / FATIGA DEL DÍA                                                  */
@@ -122,9 +124,6 @@ function shiftEnergy(dir) {
 /*  PARÁMETROS DE CONFIGURACIÓN POR MISIÓN                                    */
 /* -------------------------------------------------------------------------- */
 
-const HILL_DURATIONS = [45, 60, 90]
-const SERIES_DISTANCES = [400, 800, 1000]
-
 function clamp(target, min, max, step) {
   return (dir) => {
     const v = state[target] + dir * step
@@ -141,15 +140,17 @@ const stepProgressive = clamp("progressiveKm", 6, 18, 2)
 const stepHillReps = clamp("hillReps", 4, 12, 1)
 
 function cycleHillDuration(dir) {
-  const i = HILL_DURATIONS.indexOf(state.hillDuration)
+  const options = activeMission.value.config.durations
+  const i = options.indexOf(state.hillDuration)
   const n = i + dir
-  if (n >= 0 && n < HILL_DURATIONS.length) state.hillDuration = HILL_DURATIONS[n]
+  if (n >= 0 && n < options.length) state.hillDuration = options[n]
 }
 
 function cycleSeriesDist(dir) {
-  const i = SERIES_DISTANCES.indexOf(state.seriesDist)
+  const options = activeMission.value.config.distances
+  const i = options.indexOf(state.seriesDist)
   const n = i + dir
-  if (n >= 0 && n < SERIES_DISTANCES.length) state.seriesDist = SERIES_DISTANCES[n]
+  if (n >= 0 && n < options.length) state.seriesDist = options[n]
 }
 
 /* -------------------------------------------------------------------------- */
@@ -164,17 +165,13 @@ const basePace = computed(() => Math.round(state.time10k / 10))
 const OFFSETS = {
   warmup: 60,
   cooldown: 65,
-  regenerar: 75,
-  suave: 48,
-  tempo: 12,
-  series: -18,
-  fartlekFast: -12,
+  // Ritmos para partes de un entrenamiento que no son el bloque principal
   fartlekSlow: 55,
   recovery: 70,
-  larga: 55,       // Ritmo de tirada larga (igual que fartlek suave)
-  prog1: 60,       // 1er tercio progresivo
-  prog2: 35,       // 2o tercio progresivo
-  prog3: 12,       // 3er tercio progresivo (igual que tempo)
+  // Tercios de la progresiva
+  prog1: 60,
+  prog2: 35,
+  prog3: 12,
 }
 
 // Ritmo efectivo = (base + offset) ajustado por energía del día
@@ -205,21 +202,6 @@ const levelLabel = computed(() => `10K · ${fmtPace(basePace.value)}/km`)
 function stepBaseTime(dir) {
   const v = state.time10k + dir * 30 // ±30s en la marca de 10K
   if (v >= 1800 && v <= 3600) state.time10k = v // entre 30:00 y 60:00
-}
-
-/* -------------------------------------------------------------------------- */
-/*  CONSTRUCCIÓN DEL PLAN (la "foto rápida")                                  */
-/* -------------------------------------------------------------------------- */
-const TIPS = {
-  regenerar: "Ritmo de charla. Si no puedes hablar, vas demasiado rápido. Hoy toca sumar, no sufrir.",
-  suave: "Corre relajado y controla la respiración. Termina con ganas de hacer un km más.",
-  series: "Empieza controlado: la primera serie debe parecerte fácil. Corre las últimas igual que las primeras.",
-  tempo: "Ritmo 'cómodamente duro': sostenible pero exigente. No lo conviertas en una carrera.",
-  fartlek: "Juega con el ritmo. Exprime las partes rápidas y recupera DE VERDAD en las suaves.",
-  "tirada-larga": "La clave es la consistencia. Mantén un ritmo que te permita conversar. No te obsesiones con la velocidad, hoy sumamos kilómetros.",
-  progresiva: "Paciencia al principio. La primera parte debe sentirse muy cómoda. Concéntrate en apretar de verdad solo en el último tercio.",
-  cuestas: "Ataca la subida con buena forma: mirada al frente, braceo activo. La recuperación es clave, baja trotando muy suave para estar listo para la siguiente.",
-  piramide: "Mantén la calma en la subida de la pirámide; no gastes toda la energía. El objetivo es hacer la segunda mitad tan fuerte como la primera.",
 }
 
 // step: { tag, label, meta, pace, km, sec, hex }
@@ -255,7 +237,7 @@ const plan = computed(() => {
   }
 
   if (m.key === "regenerar") {
-    const p = pace("regenerar")
+    const p = Math.round((basePace.value + m.offset) * energy.value.mult)
     const sec = state.regenMin * 60
     steps.push({
       tag: "MAIN",
@@ -279,7 +261,7 @@ const plan = computed(() => {
 
   if (m.key === "suave") {
     warm(8)
-    const p = pace("suave")
+    const p = Math.round((basePace.value + m.offset) * energy.value.mult)
     const sec = state.aerobicKm * p
     steps.push({
       tag: "MAIN",
@@ -295,7 +277,7 @@ const plan = computed(() => {
 
   if (m.key === "series") {
     warm(12)
-    const wp = pace("series")
+    const wp = Math.round((basePace.value + m.offset) * energy.value.mult)
     const rp = pace("recovery")
     const workKm = (state.seriesReps * state.seriesDist) / 1000
     const workSec = workKm * wp
@@ -317,7 +299,7 @@ const plan = computed(() => {
 
   if (m.key === "tempo") {
     warm(12)
-    const p = pace("tempo")
+    const p = Math.round((basePace.value + m.offset) * energy.value.mult)
     const sec = state.tempoMin * 60
     steps.push({
       tag: "MAIN",
@@ -333,7 +315,7 @@ const plan = computed(() => {
 
   if (m.key === "fartlek") {
     warm(10)
-    const fp = pace("fartlekFast")
+    const fp = Math.round((basePace.value + m.offset) * energy.value.mult)
     const sp = pace("fartlekSlow")
     const fastSec = state.fartlekReps * 60
     const slowSec = state.fartlekReps * 90
@@ -354,7 +336,7 @@ const plan = computed(() => {
 
   if (m.key === "tirada-larga") {
     warm(5)
-    const p = pace("larga")
+    const p = Math.round((basePace.value + m.offset) * energy.value.mult)
     const sec = state.longRunKm * p
     steps.push({
       tag: "MAIN",
@@ -411,7 +393,7 @@ const plan = computed(() => {
 
   if (m.key === "piramide") {
     warm(12)
-    const p = pace("series")
+    const p = Math.round((basePace.value + m.offset) * energy.value.mult)
     const rp = pace("recovery")
     const pyramidSteps = [1, 2, 3, 4, 3, 2, 1] // en minutos
     const workSec = pyramidSteps.reduce((a, min) => a + min * 60, 0)
@@ -434,7 +416,7 @@ const plan = computed(() => {
   const totalKm = steps.reduce((a, s) => a + s.km, 0)
   const totalSec = steps.reduce((a, s) => a + s.sec, 0)
 
-  return { steps, totalKm, totalSec, tip: TIPS[m.key], mission: m }
+  return { steps, totalKm, totalSec, tip: m.tip, mission: m }
 })
 
 /* -------------------------------------------------------------------------- */
@@ -546,7 +528,7 @@ function launch() {
 
           <!-- Botones de misión tipo menú de juego -->
           <div class="grid grid-cols-3 gap-3" role="menu" aria-label="Tipos de entrenamiento">
-            <div v-for="m in MISSIONS" :key="m.key" role="none">
+            <div v-for="m in state.missions" :key="m.key" role="none">
               <button
                 role="menuitem"
                 class="press group flex h-36 w-full flex-col items-center justify-start gap-2 rounded-xl border-2 bg-panel-2 px-2 py-3 text-center transition-colors"
