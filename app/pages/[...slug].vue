@@ -301,6 +301,63 @@ const view = ref("menu")
 // Misión seleccionada (clave)
 const missionKey = ref(null)
 
+// Estado para el formulario de creación de misiones
+const newMissionData = ref(null)
+
+function showCreateForm() {
+  newMissionData.value = {
+    key: `custom_${Date.now()}`,
+    name: "CUSTOM",
+    sub: "A medida",
+    icon: "🧑‍🚀",
+    hex: "#e0e0e0",
+    tip: "¡Buen entrenamiento!",
+    type: "simple_run",
+    planConfig: {
+      warmup_min: 10,
+      cooldown_min: 5,
+      mainBlock: {
+        label: "Carrera continua",
+        metaTemplate: "{value} {unit_label}",
+        unit: "distance", // 'distance' o 'duration'
+        value: 10, // Valor por defecto
+        offset: 50,
+      },
+    },
+  }
+  view.value = "create"
+}
+
+function saveNewMission() {
+  if (!newMissionData.value) return
+
+  const missionToAdd = { ...newMissionData.value }
+
+  // El motor del plan usará 'param_value' para misiones personalizadas
+  missionToAdd.planConfig.mainBlock.param_value = missionToAdd.planConfig.mainBlock.value
+  delete missionToAdd.planConfig.mainBlock.value
+
+  // Añadir 'unit_label' para la plantilla meta
+  missionToAdd.planConfig.mainBlock.unit_label =
+    missionToAdd.planConfig.mainBlock.unit === "distance" ? "km" : "min"
+
+  state.missions.push(missionToAdd)
+  view.value = "menu"
+}
+
+function deleteMission(key) {
+  const index = state.missions.findIndex(m => m.key === key)
+  if (index !== -1 && state.missions[index].key.startsWith('custom_')) {
+    state.missions.splice(index, 1)
+  }
+}
+
+function backToMenu() {
+  view.value = "menu"
+  missionKey.value = null
+}
+
+
 const activeMission = computed(() => state.missions.find((m) => m.key === missionKey.value) || null)
 
 /* -------------------------------------------------------------------------- */
@@ -429,10 +486,16 @@ const plan = computed(() => {
   // 1. TIPO: Rodaje simple (distancia o tiempo)
   if (m.type === "simple_run") {
     const p = Math.round((basePace.value + main.offset) * energy.value.mult)
-    const value = state[main.param]
+    // Las misiones personalizadas tienen 'param_value', las de por defecto usan 'param'
+    const value = main.param_value !== undefined ? main.param_value : state[main.param]
     const sec = main.unit === "duration" ? value * 60 : value * p
     const km = main.unit === "distance" ? value : sec / p
-    const meta = main.metaTemplate.replace("{duration}", value).replace("{distance}", value)
+    const meta = main.metaTemplate
+      .replace("{duration}", value)
+      .replace("{distance}", value)
+      .replace("{value}", value)
+      .replace("{unit_label}", main.unit_label || (main.unit === 'distance' ? 'km' : 'min'))
+
     steps.push({ tag: "MAIN", label: main.label, meta, pace: p, km, sec, hex: m.hex })
   }
 
@@ -525,10 +588,6 @@ function selectMission(key) {
   missionKey.value = key
   view.value = "setup"
 }
-function backToMenu() {
-  view.value = "menu"
-  missionKey.value = null
-}
 
 // "Foto rápida" tomada → feedback tipo arcade
 const launched = ref(false)
@@ -598,7 +657,9 @@ function launch() {
             <h1 class="font-display text-lg font-black tracking-wider text-ink">
               SELECT<span class="text-neon-green"> MISSION</span>
             </h1>
-            <span class="text-[10px] text-muted blink">▍</span>
+            <button @click="showCreateForm" class="press grid h-8 w-8 place-items-center rounded-md border-2 border-line bg-panel text-2xl font-black text-neon-green" aria-label="Crear nueva misión">
+              +
+            </button>
           </div>
 
           <!-- Ajuste rápido del nivel (marca de 10K) -->
@@ -627,7 +688,7 @@ function launch() {
 
           <!-- Botones de misión tipo menú de juego -->
           <div class="grid grid-cols-3 gap-3" role="menu" aria-label="Tipos de entrenamiento">
-            <div v-for="m in state.missions" :key="m.key" role="none">
+            <div v-for="m in state.missions" :key="m.key" role="none" class="relative">
               <button
                 role="menuitem"
                 class="press group flex h-36 w-full flex-col items-center justify-start gap-2 rounded-xl border-2 bg-panel-2 px-2 py-3 text-center transition-colors"
@@ -650,6 +711,14 @@ function launch() {
                   </span>
                   <span class="text-[9px] text-muted">{{ m.sub }}</span>
                 </span>
+              </button>
+               <button
+                v-if="m.key.startsWith('custom_')"
+                @click.stop="deleteMission(m.key)"
+                class="absolute top-2 right-2 h-6 w-6 bg-neon-red text-oled rounded-full text-xs font-bold"
+                aria-label="Borrar misión"
+              >
+                X
               </button>
             </div>
           </div>
@@ -695,6 +764,49 @@ function launch() {
             </p>
           </div>
         </div>
+
+        <!-- ============================================================== -->
+        <!--  ESTADO NUEVO · FORMULARIO DE CREACIÓN                         -->
+        <!-- ============================================================== -->
+        <div v-else-if="view === 'create' && newMissionData" class="p-4">
+          <h1 class="font-display text-lg font-black tracking-wider text-ink mb-3">
+            NUEVA<span class="text-neon-green"> MISIÓN</span>
+          </h1>
+          <div class="flex flex-col gap-3 text-sm">
+            <!-- Nombre y Subtítulo -->
+            <input v-model="newMissionData.name" placeholder="Nombre (ej. FONDO FÁCIL)" class="form-input">
+            <input v-model="newMissionData.sub" placeholder="Subtítulo (ej. 15km a R1)" class="form-input">
+            <!-- Icono y Color -->
+            <div class="grid grid-cols-2 gap-2">
+              <input v-model="newMissionData.icon" placeholder="Icono (ej. 🐢)" class="form-input">
+              <input v-model="newMissionData.hex" placeholder="Color Hex (ej. #35c1ff)" class="form-input">
+            </div>
+            <!-- Unidad y Valor -->
+            <div class="grid grid-cols-2 gap-2">
+              <select v-model="newMissionData.planConfig.mainBlock.unit" class="form-input">
+                <option value="distance">Distancia (km)</option>
+                <option value="duration">Duración (min)</option>
+              </select>
+              <input v-model.number="newMissionData.planConfig.mainBlock.value" type="number" placeholder="Valor" class="form-input">
+            </div>
+            <!-- Offset de Ritmo -->
+            <div class="flex flex-col gap-1">
+              <label class="text-xs text-muted">Offset de Ritmo ({{newMissionData.planConfig.mainBlock.offset}}s)</label>
+              <input v-model.number="newMissionData.planConfig.mainBlock.offset" type="range" min="-30" max="90" class="w-full">
+            </div>
+            <!-- Warmup y Cooldown -->
+            <div class="grid grid-cols-2 gap-2">
+                <input v-model.number="newMissionData.planConfig.warmup_min" type="number" placeholder="Warmup (min)" class="form-input">
+                <input v-model.number="newMissionData.planConfig.cooldown_min" type="number" placeholder="Cooldown (min)" class="form-input">
+            </div>
+            <!-- Botones de Acción -->
+            <div class="mt-2 grid grid-cols-2 gap-3">
+              <button @click="view = 'menu'" class="press-btn-secondary">Cancelar</button>
+              <button @click="saveNewMission" class="press-btn-primary">Guardar</button>
+            </div>
+          </div>
+        </div>
+
 
         <!-- ============================================================== -->
         <!--  ESTADO 2 · SETUP + FOTO RÁPIDA                                -->
@@ -968,5 +1080,46 @@ function launch() {
   border: 1px solid var(--color-line);
   background: var(--color-panel);
   color: var(--color-ink);
+}
+/* Estilos para el formulario de nueva misión */
+.form-input {
+  background-color: var(--color-panel-2);
+  border: 1px solid var(--color-line);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--color-ink);
+  width: 100%;
+}
+.form-input::placeholder {
+  color: var(--color-muted);
+}
+.form-input:focus {
+  outline: none;
+  border-color: var(--color-neon-green);
+}
+
+.press-btn-primary, .press-btn-secondary {
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  transition: all 0.1s ease;
+}
+.press-btn-primary {
+  background-color: var(--color-neon-green);
+  color: var(--color-oled);
+  border: 2px solid var(--color-neon-green);
+  box-shadow: 4px 4px 0 0 #2a9c5d55;
+}
+.press-btn-secondary {
+  background-color: var(--color-panel-2);
+  color: var(--color-ink);
+  border: 2px solid var(--color-line);
+  box-shadow: 4px 4px 0 0 #232b38;
+}
+.press-btn-primary:active, .press-btn-secondary:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 0 #00000055;
 }
 </style>
