@@ -26,7 +26,7 @@ const MISSIONS = [
     planConfig: {
       blocks: [
         { type: "run", label: "Rodaje regenerativo", metaTemplate: "{value} min continuos", unit: "duration", value_param: "regenMin", offset: 75 },
-        { type: "extra", label: "Movilidad + estiramientos", meta: "5 min · suelta piernas", sec: 300, hex: "#ffe14d" },
+        { type: "extra", label: "Movilidad + estiramientos", meta: "5 min · suelta piernas", sec: 300, km: 0, hex: "#ffe14d" },
       ]
     },
   },
@@ -160,6 +160,22 @@ const MISSIONS = [
       ]
     },
   },
+  {
+    key: "cacos",
+    name: "CACOS",
+    sub: "Caminar · correr",
+    icon: "🚶‍♂️",
+    hex: "#00d4a8",
+    tip: "Alterna correr y caminar sin prisas. Recupera bien caminando y vuelve a correr con buenas sensaciones.",
+    type: "custom",
+    planConfig: {
+      blocks: [
+        { type: "warmup", unit: "duration", value: 5 },
+        { type: "interval", label: "Bloque CACOS", metaTemplate: "{reps} × {work_s}'' corre / {rec_s}'' camina", work_offset: -12, rec_pace_offset: "walk", params: { reps: "cacosReps", work_s: 120, rec_s: 60 } },
+        { type: "cooldown", unit: "duration", value: 5 },
+      ]
+    },
+  },
 ]
 
 // El estado que se guardará en localStorage
@@ -173,6 +189,7 @@ const state = reactive({
   aerobicKm: 8,
   regenMin: 35,
   fartlekReps: 8,
+  cacosReps: 10,
   longRunKm: 12,
   progressiveKm: 10,
   hillReps: 8,
@@ -218,7 +235,7 @@ const password = ref("")
 const errorMessage = ref("")
 
 const checkPassword = () => {
-  if (password.value === "Farah01") {
+  if (password.value === "Farah") {
     isAuthenticated.value = true
     errorMessage.value = ""
   } else {
@@ -336,6 +353,7 @@ const stepTempo = clamp("tempoMin", 10, 45, 5)
 const stepAerobic = clamp("aerobicKm", 4, 16, 1)
 const stepRegen = clamp("regenMin", 20, 60, 5)
 const stepFartlek = clamp("fartlekReps", 4, 14, 1)
+const stepCacosReps = clamp("cacosReps", 4, 16, 1)
 const stepLongRun = clamp("longRunKm", 8, 30, 1)
 const stepProgressive = clamp("progressiveKm", 6, 18, 2)
 const stepHillReps = clamp("hillReps", 4, 12, 1)
@@ -369,6 +387,7 @@ const OFFSETS = {
   // Ritmos para partes de un entrenamiento que no son el bloque principal
   fartlekSlow: 55,
   recovery: 70,
+  walk: 110,
   // Tercios de la progresiva
   prog1: 60,
   prog2: 35,
@@ -826,6 +845,16 @@ function launch() {
                 <button class="press ctrl-btn" @click="stepFartlek(-1)" aria-label="Menos cambios">◀</button>
                 <span class="w-10 text-center font-display text-base font-bold text-ink">{{ state.fartlekReps }}</span>
                 <button class="press ctrl-btn" @click="stepFartlek(1)" aria-label="Más cambios">▶</button>
+              </div>
+            </div>
+
+            <!-- CACOS: reps -->
+            <div v-else-if="missionKey === 'cacos'" class="flex items-center justify-between rounded-lg border border-line bg-panel-2 px-3 py-2">
+              <span class="text-[10px] tracking-[0.2em] text-muted">Nº REPETICIONES</span>
+              <div class="flex items-center gap-3">
+                <button class="press ctrl-btn" @click="stepCacosReps(-1)" aria-label="Menos repeticiones">◀</button>
+                <span class="w-10 text-center font-display text-base font-bold text-ink">{{ state.cacosReps }}</span>
+                <button class="press ctrl-btn" @click="stepCacosReps(1)" aria-label="Más repeticiones">▶</button>
               </div>
             </div>
 
