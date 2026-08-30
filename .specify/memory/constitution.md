@@ -1,50 +1,39 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Runcade Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Spec-Driven Development (SDD) Mandatory
+Every feature, enhancement, or fix must strictly follow the GitHub Spec Kit lifecycle: Constitution → Specify (`spec.md`) → Clarify (`clarify`) → Plan (`plan.md`) → Tasks (`tasks.md`) → Implement (`implement`) → Converge (`converge`). No premature coding without an approved specification and technical plan.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Nuxt-First & Modern Vue Architecture
+All frontend logic must leverage modern Nuxt and Vue 3 paradigms using the Composition API with `<script setup lang="ts">`, strict TypeScript, and standard directory conventions (`pages/`, `components/`, `composables/`, `server/`, `layouts/`). Avoid anti-patterns or bloated global states where simple composables or Nuxt data-fetching utilities (`useFetch`, `useAsyncData`) suffice.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Test-First & Quality Assurance (Vitest)
+TDD is strictly enforced for critical business logic and composables. Tests must be written and verified using **Vitest** alongside the project's testing utilities. The Red-Green-Refactor cycle applies to all feature implementations.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Styling via Tailwind CSS
+All UI components and layouts must use utility-first styling via **Tailwind CSS**, adhering to design consistency, responsiveness, and accessibility standards without introducing arbitrary custom CSS unless strictly required.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Strict Dependency Management & Simplicity
+**npm** is the exclusive package manager for all script executions, package additions, and dependency resolutions. Adhere strictly to YAGNI (You Aren't Gonna Need It) and KISS principles, keeping the codebase clean, modular, and performant.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Additional Constraints
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### Technical Stack & Ecosystem Standards
+- **Framework:** Nuxt latest stable, Vue 3.
+- **Language:** TypeScript with strict mode enabled (`tsconfig.json`).
+- **Testing:** Vitest for unit and integration testing.
+- **Package Management:** `npm` only (do not introduce `pnpm`, `yarn`, or `bun` lockfiles or commands).
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Development Workflow & Quality Gates
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### Spec Kit Enforcement & Review Process
+- Every Pull Request or change set must align directly with its corresponding `spec.md` and `plan.md`.
+- Code changes must pass the Convergence phase (`/speckit.converge`), ensuring all tests pass, TypeScript compilation succeeds without errors, and functionality matches the initial specification.
+- Complexity must be justified; changes that bypass the SDD workflow will be rejected.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This Constitution supersedes all other ad-hoc practices or shortcuts. Amendments to this document require explicit documentation, team approval, and a corresponding migration or adaptation plan. All development actions must verify compliance with these rules at every phase of the Spec Kit workflow.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-03-30 | **Last Amended**: 2026-03-30
