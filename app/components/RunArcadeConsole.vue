@@ -26,6 +26,7 @@ const {
   step,
   cycleSeriesDist,
   cycleHillDuration,
+  selectLevel,
   backToMenu,
   launch,
   saveNewMission,
@@ -99,6 +100,7 @@ function onStep(key: string, dir: -1 | 1) {
             @delete-mission="deleteCustomMission"
             @step-base-time="stepBaseTime"
             @shift-energy="shiftEnergy"
+            @select-level="selectLevel"
           />
 
           <!-- Vista: formulario de creación -->

@@ -7,6 +7,21 @@
 /** Clave de cualquier campo de configuración del usuario (para steppers y params de bloques). */
 export type StateKey = keyof UserSettings
 
+/** Clave de configuración numérica (excluye levelKey, que es un preset por nombre). */
+export type NumericStateKey = Exclude<StateKey, 'levelKey'>
+
+/** Clave de nivel predeterminado (presets de marca 10K). */
+export type LevelKey = 'facil' | 'intermedio' | 'avanzado' | 'elite'
+
+/** Preset de nivel: nombre, acento neón y marca de 10K asociada. */
+export interface LevelPreset {
+  key: LevelKey
+  label: string
+  hex: string
+  /** Marca de 10K del preset en segundos. */
+  time10k: number
+}
+
 /** Clave de ritmo respecto al ritmo base (offsets del motor). */
 export type PaceKey =
   | 'warmup'
@@ -31,6 +46,8 @@ export interface EnergyLevel {
 export interface UserSettings {
   /** Marca de 10K en segundos (rango [1800, 3600]). */
   time10k: number
+  /** Nivel predeterminado activo (preset de LEVELS más cercano a time10k). */
+  levelKey: LevelKey
   /** Índice en ENERGY_LEVELS (0=fresco, 1=normal, 2=cansado). */
   energyIndex: number
   seriesReps: number

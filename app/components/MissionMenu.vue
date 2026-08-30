@@ -5,7 +5,8 @@
 
 import { fmtPace, levelLabel } from '../utils/formatters'
 import { ENERGY_LEVELS } from '../utils/missions'
-import type { EnergyLevel, Mission, UserSettings } from '../utils/types'
+import { LEVELS } from '../utils/levels'
+import type { EnergyLevel, LevelKey, Mission, UserSettings } from '../utils/types'
 
 defineProps<{
   catalog: Mission[]
@@ -19,7 +20,15 @@ const emit = defineEmits<{
   deleteMission: [key: string]
   stepBaseTime: [dir: -1 | 1]
   shiftEnergy: [dir: -1 | 1]
+  selectLevel: [key: LevelKey]
 }>()
+
+/** Estilo arcade de tarjeta de nivel: activo → borde neón + glow, inactivo → línea. */
+function levelCardStyle(active: boolean, hex: string) {
+  return active
+    ? { borderColor: hex, boxShadow: `0 0 12px ${hex}66` }
+    : { borderColor: '#232b38', boxShadow: 'none' }
+}
 </script>
 
 <template>
@@ -35,6 +44,26 @@ const emit = defineEmits<{
       >
         +
       </button>
+    </div>
+
+    <!-- Selección de nivel predeterminado (presets de marca 10K) -->
+    <div class="mb-4">
+      <span class="text-[10px] tracking-[0.25em] text-muted">NIVEL</span>
+      <div class="mt-1.5 grid grid-cols-4 gap-1.5" role="group" aria-label="Nivel predeterminado">
+        <button
+          v-for="lvl in LEVELS"
+          :key="lvl.key"
+          class="press flex flex-col items-center gap-0.5 rounded-lg border-2 bg-panel-2 px-1 py-2 transition-colors"
+          :style="levelCardStyle(settings.levelKey === lvl.key, lvl.hex)"
+          :aria-pressed="settings.levelKey === lvl.key"
+          @click="emit('selectLevel', lvl.key)"
+        >
+          <span class="font-display text-[11px] font-black leading-none tracking-wide" :style="{ color: lvl.hex }">
+            {{ lvl.label }}
+          </span>
+          <span class="text-[9px] leading-none text-muted">{{ fmtPace(lvl.time10k) }}</span>
+        </button>
+      </div>
     </div>
 
     <!-- Ajuste rápido del nivel (marca de 10K) -->

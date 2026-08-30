@@ -8,8 +8,9 @@
    ============================================================================ */
 
 import { MISSIONS, STORAGE_KEY, STORAGE_VERSION } from './missions'
+import { LEVELS, nearestLevel } from './levels'
 import { DEFAULT_SETTINGS, SETTINGS_RANGES } from './settings'
-import type { Mission, PersistedStateV2, UserSettings } from './types'
+import type { LevelKey, Mission, PersistedStateV2, UserSettings } from './types'
 
 /** Valor dentro del rango [min, max]. */
 export function clamp(value: number, min: number, max: number): number {
@@ -17,17 +18,26 @@ export function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max)
 }
 
+/** Nivel válido: conserva la clave si existe en LEVELS; si no, deriva el más cercano a la marca. */
+export function sanitizeLevelKey(raw: unknown, time10kSec: number): LevelKey {
+  if (typeof raw === 'string' && LEVELS.some((lvl) => lvl.key === raw)) {
+    return raw as LevelKey
+  }
+  return nearestLevel(time10kSec).key
+}
+
 /** Estado saneado: defaults por campo + clamp al rango definido. */
 export function sanitizeSettings(raw: unknown): UserSettings {
   const src = raw && typeof raw === 'object' ? (raw as Partial<UserSettings>) : {}
   const out = { ...DEFAULT_SETTINGS }
 
-  for (const key of Object.keys(DEFAULT_SETTINGS) as (keyof UserSettings)[]) {
+  for (const key of Object.keys(SETTINGS_RANGES) as (Exclude<keyof UserSettings, 'levelKey'>)[]) {
     const range = SETTINGS_RANGES[key]
     const value = src[key]
-    if (typeof value !== 'number' || !Number.isFinite(value)) continue
+    if (!range || typeof value !== 'number' || !Number.isFinite(value)) continue
     out[key] = clamp(value, range.min, range.max)
   }
+  out.levelKey = sanitizeLevelKey(src.levelKey, out.time10k)
   return out
 }
 

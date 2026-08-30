@@ -5,10 +5,12 @@
    generado por el motor de ritmos. Sin lógica de cálculo inline.
    ============================================================================ */
 
+import { computed, ref } from 'vue'
 import { buildPlan, energyFromIndex } from '../utils/pace'
 import { ENERGY_LEVELS, PREDEFINED_COLORS } from '../utils/missions'
+import { levelByKey, nearestLevel } from '../utils/levels'
 import { SETTINGS_RANGES, SERIES_DISTANCES, HILL_DURATIONS } from '../utils/settings'
-import type { Mission, StateKey, UserSettings } from '../utils/types'
+import type { LevelKey, Mission, NumericStateKey, StateKey, UserSettings } from '../utils/types'
 
 type ViewName = 'menu' | 'create' | 'setup'
 
@@ -35,14 +37,28 @@ export function useRunArcadeSetup(state: UserSettings, catalog: ComputedRef<Miss
   /* ------------------------------------------------------------------------ */
 
   function step(key: StateKey, dir: -1 | 1) {
+    if (key === 'levelKey') return
     const range = SETTINGS_RANGES[key]
     if (!range) return
     const next = state[key] + dir * range.step
-    if (next >= range.min && next <= range.max) state[key] = next
+    if (next >= range.min && next <= range.max) {
+      state[key] = next
+      // Sincronización bidireccional: al afinar la marca, el nivel activo
+      // sigue al preset más cercano.
+      if (key === 'time10k') state.levelKey = nearestLevel(state.time10k).key
+    }
+  }
+
+  /** Aplica un preset de nivel: fija la marca 10K y el nivel activo. */
+  function selectLevel(key: LevelKey) {
+    const preset = levelByKey(key)
+    if (!preset) return
+    state.levelKey = preset.key
+    state.time10k = preset.time10k
   }
 
   /** Cicla por una lista de valores discretos (seriesDist, hillDuration). */
-  function cycleFromList(key: StateKey, dir: -1 | 1, options: number[]) {
+  function cycleFromList(key: NumericStateKey, dir: -1 | 1, options: number[]) {
     const current = state[key]
     const i = options.indexOf(current)
     const n = i + dir
@@ -159,6 +175,7 @@ export function useRunArcadeSetup(state: UserSettings, catalog: ComputedRef<Miss
     cycleHillDuration,
     shiftEnergy,
     stepBaseTime,
+    selectLevel,
     selectMission,
     backToMenu,
     showCreateForm,

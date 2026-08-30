@@ -94,6 +94,25 @@ Como desarrollador, quiero una única fuente de verdad para el tema de Tailwind 
 
 ---
 
+### User Story 6 - La consola es instalable y funciona offline (PWA) (Priority: P1)
+
+Como corredor que entrena fuera de casa (pista, parque, montaña) con cobertura móvil irregular, quiero poder instalar RUN·ARCADE en mi móvil como una app nativa (icono en el escritorio, pantalla completa sin barra del navegador) y poder abrirla y usarla **sin conexión**, para tener siempre mi foto rápida a mano aunque no haya red.
+
+**Why this priority**: Es la evolución de producto que el usuario pidió explícitamente. La consola es 100% cliente (toda la lógica de ritmos y persistencia viven en el navegador), así que es candidata natural a PWA: bajo coste de implementación, alto valor percibido.
+
+**Independent Test**: Se abre la app en un móvil (o DevTools con dispositivo simulado), se usa una vez con conexión, y luego:
+- Desde el menú del navegador → "Instalar app" / "Añadir a pantalla de inicio" → aparece un icono de RUN·ARCADE.
+- Se pone el dispositivo en modo avión y se abre la app desde el icono instalado → carga y funciona (login → menú → foto rápida) sin conexión.
+
+**Acceptance Scenarios**:
+
+1. **Given** la app desplegada en producción, **When** el navegador del móvil detecta el manifest, **Then** ofrece instalar la app con el nombre "RUN·ARCADE", icono de la consola y apertura en pantalla completa (standalone) con orientación vertical.
+2. **Given** el usuario visitó la app al menos una vez con conexión, **When** abre la app sin conexión (modo avión), **Then** la consola carga y el flujo completo (login, menú de misiones, ajustes, foto rápida, misiones personalizadas) funciona normalmente usando el estado guardado localmente.
+3. **Given** una nueva versión de la app desplegada, **When** el usuario reabre la app con conexión, **Then** el Service Worker se actualiza automáticamente y el usuario sigue viendo la versión más reciente.
+4. **Given** el despliegue en Vercel, **When** se hace un build de producción y se sirve desde la CDN de Vercel, **Then** el `manifest`, el Service Worker y los iconos se sirven correctamente en la raíz y la instalación/offline funcionan sin configuración adicional de servidor.
+
+---
+
 ### Edge Cases
 
 - ¿Qué pasa cuando `localStorage` no está disponible (modo privado, SSR, bloqueo del navegador)? → La app debe seguir funcionando en memoria sin lanzar excepciones.
@@ -104,6 +123,11 @@ Como desarrollador, quiero una única fuente de verdad para el tema de Tailwind 
 - ¿Qué pasa si una misión personalizada guardada en una versión antigua no tiene campos nuevos del formulario? → Los campos faltantes se rellenan con valores por defecto al fusionar.
 - ¿Qué ocurre con `totalKm`/`totalSec` si los valores de entrada son extremos (ej. marca 10K en el límite de 30:00 o 60:00)? → Los cálculos no producen NaN, infinito ni negativos.
 - ¿Qué pasa si el catálogo base en código añade una misión con el mismo `key` que una misión guardada modificada por el usuario? → El catálogo de código es la fuente de verdad para el comportamiento; las personalizaciones del usuario solo afectan a misiones personalizadas.
+- ¿Qué ocurre si el usuario abre la app instalada sin conexión en la **primera visita** (sin precaché previo)? → El Service Worker no puede servir la app; se muestra la pantalla offline del navegador. El soporte offline cubre "tras la primera visita con conexión" (escenario estándar de PWA).
+- ¿Qué ocurre si el Service Worker intenta precachear archivos que cambian entre builds (hashes)? → El `registerType: autoUpdate` + precaché por hash de Workbox garantiza que los recursos antiguos se limpian (`cleanupOutdatedCaches`) y no hay mezcla de versiones.
+- ¿Qué ocurre en el modo de desarrollo local (`npm run dev`)? → El Service Worker se desactiva en dev (`devOptions.enabled: false`) para evitar cachés que rompan el hot-reload; la PWA se valida sobre el build de producción.
+- ¿Qué pasa si el navegador no soporta Service Worker (navegadores muy antiguos)? → La app sigue funcionando online como siempre; la instalación/offline simplemente no están disponibles.
+- ¿Qué pasa si el usuario navega a una ruta comodín (`/ruta/desconocida`) estando offline? → El Service Worker debe servir el fallback a `/` (la consola) en lugar de un error de red.
 
 ## Requirements *(mandatory)*
 
@@ -121,6 +145,11 @@ Como desarrollador, quiero una única fuente de verdad para el tema de Tailwind 
 - **FR-010**: La ruta comodín NO DEBE capturar las rutas de contenido estático.
 - **FR-011**: El proyecto NO DEBE contener componentes o archivos de andamiaje sin uso.
 - **FR-012**: La contraseña de acceso DEBE permanecer tal cual está actualmente (parche temporal intencional, fuera del alcance de este refactor).
+- **FR-013**: La app DEBE ser instalable como PWA: el manifest DEBE declarar el nombre, colores de la consola arcade (fondo OLED `#050608` y acento neón verde `#39ff88`), iconos de la app, `display: standalone` (pantalla completa) y `orientation: portrait` (vertical).
+- **FR-014**: La app DEBE registrar un Service Worker con soporte offline básico: tras la primera visita con conexión, la consola DEBE poder abrirse y usarse sin conexión (login, menú, ajustes, foto rápida y misiones personalizadas usan estado local).
+- **FR-015**: El Service Worker DEBE actualizarse automáticamente cuando hay una nueva versión del build (autoUpdate) y DEBE limpiar los cachés de versiones anteriores.
+- **FR-016**: La configuración PWA DEBE ser compatible con el despliegue en Vercel: el `manifest`, el `sw.js` y los iconos DEBEN servirse en la raíz del dominio sin requerir configuración de servidor adicional.
+- **FR-017**: El modo de desarrollo local (`npm run dev`) NO DEBE activar el Service Worker (para no interferir con el hot-reload); la validación de la PWA se hace sobre el build de producción.
 
 ### Key Entities *(include if feature involves data)*
 
@@ -140,6 +169,8 @@ Como desarrollador, quiero una única fuente de verdad para el tema de Tailwind 
 - **SC-004**: El código compila con TypeScript estricto sin errores y el archivo de página queda por debajo de ~150 líneas de lógica propia (sin catálogo ni motor de ritmos inline).
 - **SC-005**: El bundle de CSS no contiene estilos duplicados y el tema vive en un único archivo fuente.
 - **SC-006**: El catálogo de misiones en código se puede ampliar con nuevas misiones y los usuarios con estado antiguo las verán sin necesidad de borrar su `localStorage`.
+- **SC-007**: La app se puede instalar en el móvil (icono en pantalla de inicio, apertura en pantalla completa vertical) y, tras una visita con conexión, funciona sin conexión en el 100% del flujo core.
+- **SC-008**: El despliegue en Vercel sirve el manifest y el Service Worker correctamente; la instalación y el modo offline se validan en el entorno de producción de Vercel sin cambios de configuración del servidor.
 
 ## Assumptions
 
@@ -150,3 +181,7 @@ Como desarrollador, quiero una única fuente de verdad para el tema de Tailwind 
 - Se asume TypeScript estricto como estándar obligatorio del proyecto a partir de este refactor.
 - Se asume que el proyecto usa el patrón de Nuxt 4 con directorio `app/` y que la estructura de archivos puede reorganizarse libremente mientras las rutas de página (catch-all) se conserven.
 - Vitest se usará para validar las funciones puras (motor de ritmos, formateadores, lógica de persistencia/fusión) sin necesidad de montar la app completa.
+- La PWA se implementa con el módulo `@vite-pwa/nuxt` (ecosistema estándar Nuxt); el Service Worker se sirve desde el output de build de Nuxt (`.output/public/`), compatible con la salida estática de Vercel.
+- Los iconos de la app se generan y colocan en `public/` (o el directorio equivalente del output de build); se usa un diseño de la consola arcade (fondo OLED oscuro con acento neón).
+- El soporte offline cubre el escenario estándar de PWA: funciona tras la primera visita con conexión; no se exige soporte offline en la primera visita ni para rutas de contenido del starter.
+- La persistencia sigue siendo `localStorage`; la PWA no introduce almacenamiento adicional ni backend.

@@ -40,6 +40,26 @@ npm run build        # build de producción
 npm run preview      # previsualizar el build
 ```
 
+## PWA (instalable + offline)
+
+RUN·ARCADE es una **Progressive Web App** usando [`@vite-pwa/nuxt`](https://vite-pwa-org.netlify.app/frameworks/nuxt):
+
+- **Instalable**: manifest con `display: standalone` y `orientation: portrait` — al abrirla instalada se ve en pantalla completa vertical, como una app nativa.
+- **Offline**: un Service Worker (Workbox) precachea todos los assets del build y cachea el HTML de navegación (NetworkFirst). Tras una visita con conexión, la consola funciona sin conexión: login, menú de misiones, ajustes, foto rápida y misiones personalizadas.
+- **Actualizaciones**: `registerType: 'autoUpdate'` — el SW se actualiza solo cuando hay un nuevo build.
+- **Dev**: el Service Worker está desactivado en `npm run dev` (`devOptions.enabled: false`); la PWA se valida sobre el build de producción (`npm run build && npm run preview`).
+
+Configuración en `nuxt.config.ts` → bloque `pwa`. Los iconos viven en `public/` (`pwa-*.png`, `apple-touch-icon.png`, `pwa-icon.svg`) y el manifest link se inyecta desde `app/app.vue` via `<VitePwaManifest />`.
+
+### Despliegue en Vercel
+
+`@vite-pwa/nuxt` emite `sw.js`, `manifest.webmanifest` y los iconos en `.output/public/`, que Vercel sirve automáticamente en la raíz del dominio — sin configuración de servidor adicional. Para verificar tras el deploy:
+
+```bash
+curl -I https://<tu-dominio>/manifest.webmanifest   # → 200 application/manifest+json
+curl -I https://<tu-dominio>/sw.js                  # → 200 text/javascript
+```
+
 ## Nota sobre `content/`
 
 Los archivos markdown de `content/` (`index.md`, `about.md`) son andamiaje del

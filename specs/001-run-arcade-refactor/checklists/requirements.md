@@ -32,4 +32,4 @@
 ## Notes
 
 - Items marked incomplete require spec updates before `/speckit.clarify` or `/speckit.plan`
-- Validado: el login queda fuera de alcance por decisión explícita del usuario (FR-012). Las historias cubren no-regresión (P1), robustez de persistencia (P1), mantenibilidad/tipado (P2), corrección de cálculo (P2) y limpieza de base (P3).
+- Validado: el login queda fuera de alcance por decisión explícita del usuario (FR-012). Las historias cubren no-regresión (P1), robustez de persistencia (P1), mantenibilidad/tipado (P2), corrección de cálculo (P2), limpieza de base (P3) y PWA instalable/offline (P1, US6 añadida posteriormente por petición del usuario con `@vite-pwa/nuxt` y compatibilidad Vercel).

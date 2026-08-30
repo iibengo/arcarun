@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   clamp,
+  sanitizeLevelKey,
   sanitizeSettings,
   sanitizeMissions,
   parsePersisted,
@@ -45,6 +46,40 @@ describe('sanitizeSettings', () => {
     expect(s.time10k).toBe(2700)
     expect(s.energyIndex).toBe(2)
     expect(s.seriesReps).toBe(8)
+  })
+})
+
+describe('sanitizeLevelKey', () => {
+  it('conserva un levelKey válido', () => {
+    expect(sanitizeLevelKey('avanzado', 2400)).toBe('avanzado')
+    expect(sanitizeLevelKey('elite', 2700)).toBe('elite')
+  })
+
+  it('deriva el nivel más cercano cuando levelKey es inválido o ausente', () => {
+    expect(sanitizeLevelKey('extremo', 2100)).toBe('avanzado')
+    expect(sanitizeLevelKey(42, 1800)).toBe('elite')
+    expect(sanitizeLevelKey(null, 2400)).toBe('intermedio')
+    expect(sanitizeLevelKey(undefined, 2700)).toBe('facil')
+  })
+})
+
+describe('sanitizeSettings con levelKey', () => {
+  it('el default deriva intermedio de la marca por defecto (40:00)', () => {
+    expect(sanitizeSettings(null).levelKey).toBe('intermedio')
+  })
+
+  it('conserva un levelKey válido del estado guardado', () => {
+    const s = sanitizeSettings({ levelKey: 'elite' } as Partial<UserSettings>)
+    expect(s.levelKey).toBe('elite')
+  })
+
+  it('corrige un levelKey inválido derivándolo de la marca saneada', () => {
+    const s = sanitizeSettings({ levelKey: 'bajo', time10k: 2100 } as unknown as Partial<UserSettings>)
+    expect(s.levelKey).toBe('avanzado')
+    const s2 = sanitizeSettings({ levelKey: 'bajo', time10k: 9999 } as unknown as Partial<UserSettings>)
+    // time10k clampa a 3600 → nivel más cercano: fácil
+    expect(s2.time10k).toBe(3600)
+    expect(s2.levelKey).toBe('facil')
   })
 })
 
@@ -119,6 +154,28 @@ describe('serializePersisted', () => {
     const parsed = parsePersisted(serializePersisted(v2))
     expect(parsed.settings.time10k).toBe(3000)
     expect(parsed.version).toBe(STORAGE_VERSION)
+  })
+
+  it('preserva el nivel seleccionado en el round-trip', () => {
+    const v2: PersistedStateV2 = {
+      version: 2,
+      settings: sanitizeSettings({ levelKey: 'avanzado', time10k: 2100 }),
+      customMissions: [],
+    }
+    const parsed = parsePersisted(serializePersisted(v2))
+    expect(parsed.settings.levelKey).toBe('avanzado')
+    expect(parsed.settings.time10k).toBe(2100)
+  })
+
+  it('un estado v2 antiguo sin levelKey carga derivando el nivel de la marca', () => {
+    const oldV2 = JSON.stringify({
+      version: 2,
+      settings: { time10k: 2700, energyIndex: 1 },
+      customMissions: [],
+    })
+    const parsed = parsePersisted(oldV2)
+    expect(parsed.settings.time10k).toBe(2700)
+    expect(parsed.settings.levelKey).toBe('facil')
   })
 })
 

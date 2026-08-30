@@ -76,12 +76,30 @@ Desde la consola del navegador, antes de recargar, inyectar en `localStorage` la
    - `formatters.test.ts`: límites (`fmtPace(240)` = `'4:00'`, `fmtDuration`, `fmtKm`, `levelLabel`).
    - `persistence.test.ts`: `parsePersisted` con JSON corrupto/null/v1/v2, `sanitizeSettings` clamps, `mergeCatalog` dedupe.
 
+### V-008 · PWA instalable (SC-007, US-6, FR-013/014)
+
+1. `npm run build` y `npm run preview` (o desplegar en Vercel).
+2. Abrir la app en móvil (o DevTools → dispositivo móvil simulado).
+3. Desde el menú del navegador → "Instalar app" / "Añadir a pantalla de inicio".
+4. **Esperado**: aparece el icono de RUN·ARCADE; al abrir la app instalada se abre en **pantalla completa** (sin barra del navegador) y en **orientación vertical**.
+5. Verificar el manifest en el navegador (DevTools → Application → Manifest): nombre, colores arcade (`#050608` / `#39ff88`), iconos y `display: standalone` + `orientation: portrait`.
+
+### V-009 · PWA offline (SC-007/SC-008, US-6, FR-014/015/016)
+
+1. Con la app abierta y **con conexión**, visitar la app una vez (para precachear).
+2. Poner el dispositivo en **modo avión** (o DevTools → Network → Offline) y recargar.
+3. **Esperado**: la consola carga sin conexión y el flujo completo funciona (login → menú de misiones → ajustes → foto rápida → misiones personalizadas), usando el estado de `localStorage`.
+4. Probar una ruta comodín offline (`/algo`): **Esperado** que sirva el fallback a `/` en lugar de un error de red.
+5. Recargar con conexión tras un nuevo build: **Esperado** que el Service Worker se actualice automáticamente (autoUpdate) y limpie cachés antiguas.
+6. **Vercel**: desde el dominio de producción, comprobar que `https://<dominio>/manifest.webmanifest` y `https://<dominio>/sw.js` se sirven con 200 en la raíz.
+
 ## Comandos resumen
 
 ```bash
-npm install          # instalar deps (incluye vitest tras la fase de implementación)
+npm install          # instalar deps (incluye vitest y @vite-pwa/nuxt tras la fase de implementación)
 npm run dev          # validación manual (V-001, V-002, V-003, V-006)
 npm test             # tests unitarios (V-007)
 npx nuxi typecheck   # tipado estricto (V-004)
 npm run build        # build + verificación de CSS (V-005)
+npm run preview      # validar la PWA sobre el build de producción (V-008, V-009)
 ```

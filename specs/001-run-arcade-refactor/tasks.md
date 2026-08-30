@@ -156,7 +156,28 @@ description: "Task list for RUN·ARCADE refactor"
 
 ---
 
-## Phase 8: Polish & Cross-Cutting Concerns
+## Phase 8: User Story 6 - La consola es instalable y funciona offline (PWA) (Priority: P1)
+
+**Goal**: Convertir RUN·ARCADE en una PWA instalable con `@vite-pwa/nuxt`: manifest arcade completo, orientación vertical + standalone, Service Worker con soporte offline básico, y despliegue compatible con Vercel.
+
+**Independent Test**: En el móvil (o DevTools con dispositivo simulado), tras una visita con conexión: instalar la app desde el menú del navegador → aparece el icono de RUN·ARCADE; poner el dispositivo en modo avión → abrir la app instalada → funciona todo el flujo core (login → menú → foto rápida) offline.
+
+### Implementation for User Story 6
+
+- [x] T042 [P] [US6] Instalar el módulo PWA: `npm install @vite-pwa/nuxt`
+- [x] T043 [US6] Configurar el módulo en `nuxt.config.ts`: añadir `'@vite-pwa/nuxt'` a `modules` y bloquee `pwa` con `registerType: 'autoUpdate'`, `devOptions: { enabled: false }` (no SW en dev) y `workbox` con `globPatterns` para js/css/html/png/svg/woff2, `cleanupOutdatedCaches: true` y `navigateFallback: '/'`
+- [x] T044 [P] [US6] Crear el manifest en la config `pwa.manifest` de `nuxt.config.ts`: `name: 'RUN·ARCADE'`, `short_name: 'RUN·ARCADE'`, `description`, `theme_color: '#050608'` (OLED), `background_color: '#050608'`, `display: 'standalone'`, `orientation: 'portrait'`, `lang: 'es'`, `start_url: '/'` e `icons` referenciando los PNG de `public/`
+- [x] T045 [US6] Crear los iconos de la app en `public/` (p. ej. `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` y `apple-touch-icon.png`) con el diseño de la consola arcade (fondo OLED + acento neón verde `#39ff88`); si no hay herramienta de diseño, generar un SVG fuente y exportarlo a los tamaños requeridos (o añadir `@vite-pwa/assets-generator` como devDependency para generarlos desde un SVG)
+- [x] T046 [US6] Verificar que el SW se registra en producción: tras `npm run build`, comprobar que `.output/public/sw.js`, `.output/public/manifest.webmanifest` (o el nombre configurado) y los iconos existen y se sirven en la raíz
+- [x] T047 [US6] Validar el despliegue en Vercel: comprobar que el manifest y el SW se sirven en la raíz del dominio de producción (curl `https://<dominio>/manifest.webmanifest` y `https://<dominio>/sw.js`) y que la instalación/offline funcionan sin configuración de servidor adicional
+- [x] T048 [US6] Validar el flujo offline en móvil/DevTools: primera visita online → modo avión → abrir la app instalada → verificar login, menú, ajustes y foto rápida funcionan; probar también la ruta comodín offline (redirige al fallback `/`)
+- [x] T049 [US6] Actualizar `README.md` con la sección PWA (instalación, uso offline, verificación en Vercel)
+
+**Checkpoint**: US6 completa y validable con V-008/V-009 de quickstart.md (nuevos escenarios PWA).
+
+---
+
+## Phase 9: Polish & Cross-Cutting Concerns
 
 **Purpose**: Validación final integral.
 
@@ -165,6 +186,9 @@ description: "Task list for RUN·ARCADE refactor"
 - [x] T039 Ejecutar `npm run build` (build exitoso; revisar CSS generado sin duplicados)
 - [x] T040 Ejecutar `npm run dev` y recorrer quickstart.md V-001 a V-007 (validación manual completa)
 - [x] T041 Actualizar README.md si describe estructura/scripts (p. ej. añadir `npm test`)
+- [x] T050 Ejecutar `npm run build` tras la integración PWA (build exitoso con SW y manifest generados)
+- [x] T051 Ejecutar `npx nuxi typecheck` tras la integración PWA (cero errores; verificar tipos del manifest en nuxt.config.ts)
+- [x] T052 Recorrer quickstart.md V-001 a V-009 (validación integral final, incluidos los escenarios PWA V-008/V-009)
 
 ---
 
@@ -179,7 +203,8 @@ description: "Task list for RUN·ARCADE refactor"
   - US3 (P2) depende de US1 (verifica el tipado de la descomposición)
   - US4 (P2) depende de US1 (modifica `pace.ts`/`missions.ts` ya creados)
   - US5 (P3) depende de US1 (elimina `style.css` y componentes ya descompuestos)
-- **Polish (Phase 8)**: Depende de todas las historias deseadas completas
+  - US6 (P1) depende de US5 (se apoya en la estructura final de `app/`, el CSS consolidado y las páginas `index.vue`/`[...slug]`)
+- **Polish (Phase 9)**: Depende de todas las historias deseadas completas
 
 ### User Story Dependencies
 
@@ -188,6 +213,7 @@ description: "Task list for RUN·ARCADE refactor"
 - **US3 (P2)**: Depende de US1 (valida tipado del código descompuesto).
 - **US4 (P2)**: Depende de US1 (T010 `pace.ts`, T009 `missions.ts`).
 - **US5 (P3)**: Depende de US1 (T022 elimina el import del CSS).
+- **US6 (P1)**: Depende de US1/US5 (estructura final, CSS global consolidado en `assets/css/tailwind.css`, páginas `index.vue` + catch-all redirect). No toca utils/composables.
 
 ### Within Each User Story
 
@@ -202,6 +228,7 @@ description: "Task list for RUN·ARCADE refactor"
 - US2: T023 (test) primero; luego T024 en paralelo con T025/T026 (integración)
 - US4: T030 (test) primero; luego T031/T032 en paralelo
 - US5: T033/T034/T035 en paralelo; T036 después
+- US6: T042 (install) primero; luego T043 y T044 en paralelo; luego T045 (iconos) puede ir en paralelo con T046; T047/T048/T049 después
 
 ---
 
@@ -222,7 +249,8 @@ description: "Task list for RUN·ARCADE refactor"
 4. US3 → typecheck → validar (tipado estricto)
 5. US4 → test independiente → validar (fix cuestas)
 6. US5 → validación visual → validar (limpieza)
-7. Polish: quickstart completo
+7. US6 → build + validación en Vercel → validar (PWA instalable + offline)
+8. Polish: quickstart completo (V-001 a V-009)
 
 ### Parallel Team Strategy
 
@@ -231,15 +259,17 @@ Con varios devs:
 2. Dev A: US1 · Dev B: US2 (tras US1 base si comparte ficheros, o secuencial)
 3. Dev C: US4 (tras pace.ts/missions.ts de US1)
 4. Dev D: US5 (tras la descomposición)
+5. Dev E: US6 (tras US1/US5; toca nuxt.config.ts y public/ — si un dev ya trabaja en nuxt.config.ts, esperar)
 
 ---
 
 ## Notes
 
 - [P] tasks = ficheros distintos, sin dependencias
-- [Story] label mapea a las user stories del spec (US1-US5)
+- [Story] label mapea a las user stories del spec (US1-US6)
 - Cada user story es completable y testeable de forma independiente
 - Verificar que los tests fallan antes de implementar (TDD)
 - Commit tras cada task o grupo lógico
 - Parar en cada checkpoint para validar la historia de forma independiente
 - La contraseña del login NO se toca (FR-012) — solo se mueve de ubicación
+- La PWA (US6) usa `@vite-pwa/nuxt`; validar SIEMPRE sobre el build de producción (el SW está desactivado en `npm run dev`)

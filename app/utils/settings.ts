@@ -9,6 +9,7 @@ import type { UserSettings } from './types'
 /** Estado de configuración por defecto (usado al arrancar sin datos guardados). */
 export const DEFAULT_SETTINGS: UserSettings = {
   time10k: 2400,
+  levelKey: 'intermedio',
   energyIndex: 1,
   seriesReps: 6,
   seriesDist: 800,
@@ -38,7 +39,7 @@ export const SETTINGS_RANGES = {
   progressiveKm: { min: 6, max: 18, step: 2 },
   hillReps: { min: 4, max: 12, step: 1 },
   hillDuration: { min: 45, max: 90, step: 15 },
-} satisfies Record<keyof UserSettings, { min: number; max: number; step: number }>
+} satisfies Record<Exclude<keyof UserSettings, 'levelKey'>, { min: number; max: number; step: number }>
 
 /** Valores discretos para campos que ciclan por lista (seriesDist, hillDuration). */
 export const SERIES_DISTANCES = [400, 800, 1000]

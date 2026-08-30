@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Fondo OLED oscuro -->
+  <rect width="512" height="512" rx="96" fill="#050608"/>
+  <!-- Borde tipo consola -->
+  <rect x="24" y="24" width="464" height="464" rx="72" fill="#0d1016" stroke="#232b38" stroke-width="6"/>
+  <!-- Pantalla CRT -->
+  <rect x="104" y="96" width="304" height="208" rx="24" fill="#050608" stroke="#39ff88" stroke-width="8"/>
+  <!-- Scanlines sutiles -->
+  <g opacity="0.15" stroke="#39ff88" stroke-width="2">
+    <line x1="104" y1="140" x2="408" y2="140"/>
+    <line x1="104" y1="176" x2="408" y2="176"/>
+    <line x1="104" y1="212" x2="408" y2="212"/>
+    <line x1="104" y1="248" x2="408" y2="248"/>
+  </g>
+  <!-- Texto RUN·ARCADE -->
+  <text x="256" y="222" font-family="monospace" font-size="40" font-weight="bold" fill="#39ff88" text-anchor="middle" letter-spacing="4">RUN·ARCADE</text>
+  <!-- Punto de estado encendido -->
+  <circle cx="392" cy="126" r="10" fill="#39ff88"/>
+  <!-- Botón A y B (mando) -->
+  <circle cx="176" cy="368" r="34" fill="#141922" stroke="#35c1ff" stroke-width="6"/>
+  <circle cx="304" cy="368" r="34" fill="#141922" stroke="#39ff88" stroke-width="6"/>
+  <!-- D-pad central -->
+  <rect x="238" y="336" width="36" height="128" rx="8" fill="#141922" stroke="#232b38" stroke-width="4"/>
+  <rect x="188" y="386" width="136" height="36" rx="8" fill="#141922" stroke="#232b38" stroke-width="4"/>
+</svg>
